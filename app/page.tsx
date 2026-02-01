@@ -10,6 +10,7 @@ export default function Home() {
   const [valuationData, setValuationData] = useState<any>(null);
   const [detectedIssues, setDetectedIssues] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
+  const [scannedPanels, setScannedPanels] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
   const [analyzingImage, setAnalyzingImage] = useState<boolean>(false);
   const [reportData, setReportData] = useState<any>(null);
@@ -117,6 +118,9 @@ export default function Home() {
 
         setReportData(data);
         setReports(prev => [...prev, data]);
+        if (data.defects?.[0]?.part) {
+           setScannedPanels(prev => [...prev, data.defects[0].part]);
+        }
       } catch (e) {
         console.error(e);
         setAnalyzingImage(false);
@@ -306,11 +310,42 @@ export default function Home() {
                 </button>
               </div>
               <h2 className="text-3xl font-black uppercase tracking-tighter italic">Appraisal Report</h2>
-              <p className="text-slate-400 text-sm">Ref: #AP-44029 • {vrm.toUpperCase()}</p>
+              <div className="flex items-center gap-2 mt-1">
+                 <p className="text-slate-400 text-sm">{valuationData?.make} {valuationData?.model} ({valuationData?.year})</p>
+                 <span className="text-slate-700">•</span>
+                 <p className="text-slate-500 font-mono text-xs uppercase tracking-widest">{vrm.toUpperCase()}</p>
+              </div>
             </div>
 
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 pb-32">
+              
+              {/* Stitching Visualization (Vehicle Map) */}
+              <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl overflow-hidden relative">
+                 <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500">360° Walkaround Progress</h3>
+                    <span className="text-[10px] font-bold text-blue-500 uppercase">{scannedPanels.length} / 8 Panels Scanned</span>
+                 </div>
+                 
+                 <div className="flex justify-center gap-2 relative h-16">
+                    {/* Visual representation of panels */}
+                    {['Front', 'Front Left', 'Left Side', 'Rear Left', 'Rear', 'Rear Right', 'Right Side', 'Front Right'].map((panel) => {
+                       const isScanned = scannedPanels.some(p => p.includes(panel));
+                       return (
+                          <div key={panel} className="flex flex-col items-center flex-1 gap-2">
+                             <div className={`w-full h-1 rounded-full transition-all duration-500 ${isScanned ? 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'bg-slate-800'}`} />
+                             <span className={`text-[8px] font-bold uppercase truncate w-full text-center ${isScanned ? 'text-blue-400' : 'text-slate-600'}`}>{panel}</span>
+                          </div>
+                       )
+                    })}
+                 </div>
+                 
+                 <div className="mt-4 flex items-center gap-4 text-[10px] font-bold text-slate-500 italic">
+                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-500" /> Scanned</div>
+                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-slate-800" /> Remaining</div>
+                 </div>
+              </div>
+
               {/* Profit/Margin Card */}
               {valuationData && (
                 <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4">

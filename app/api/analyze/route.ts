@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       3. Structural Red Flags: Check for bolt head scoring (paint chips on wing/hood bolts), inner wing ripples, or non-factory welds (MIG beads vs circular spot welds).
 
       Identify:
-      1. The specific car panel (e.g., Front Bumper, Driver Door).
+      1. The specific car panel. Use standard terms: Front, Rear, Left Side, Right Side, Front Left, Front Right, Rear Left, Rear Right.
       2. The type of damage (Scratch, Dent, Scuff, Chip).
       3. The severity (Minor, Moderate, Severe).
       4. Structural Integrity Check:
