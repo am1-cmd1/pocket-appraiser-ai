@@ -690,7 +690,7 @@ export default function Home() {
                          </div>
                       </div>
                       <div className="text-right">
-                         <p className="text-xl font-black text-blue-500">{reports.find(r => r.structural?.tireDepth)?.structural.tireDepth}</p>
+                         <p className="text-xl font-black text-blue-500">{reports.find(r => r.structural?.tireDepth)?.structural?.tireDepth}</p>
                          <p className="text-[8px] font-bold text-green-500 uppercase tracking-tighter">Legal</p>
                       </div>
                    </div>
