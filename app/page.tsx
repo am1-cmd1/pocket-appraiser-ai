@@ -9,6 +9,7 @@ export default function Home() {
   const [vrm, setVrm] = useState("");
   const [valuationData, setValuationData] = useState<any>(null);
   const [detectedIssues, setDetectedIssues] = useState<any[]>([]);
+  const [reports, setReports] = useState<any[]>([]);
   const [progress, setProgress] = useState(0);
   const [analyzingImage, setAnalyzingImage] = useState<boolean>(false);
   const [reportData, setReportData] = useState<any>(null);
@@ -115,12 +116,15 @@ export default function Home() {
         }
 
         setReportData(data);
+        setReports(prev => [...prev, data]);
       } catch (e) {
         console.error(e);
         setAnalyzingImage(false);
       }
     }
   };
+
+  const totalReconCost = reports.reduce((acc, r) => acc + r.totalCost, 0);
 
   return (
     <div className="relative h-screen w-full bg-slate-950 overflow-hidden text-slate-100 select-none">
@@ -317,7 +321,7 @@ export default function Home() {
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Target Buy Price</p>
-                      <p className="text-2xl font-black text-green-500">£{(valuationData.tradeValue - (reportData?.totalCost || 0)).toLocaleString()}</p>
+                      <p className="text-2xl font-black text-green-500">£{(valuationData.tradeValue - totalReconCost).toLocaleString()}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -327,7 +331,7 @@ export default function Home() {
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Recon Impact</p>
-                      <p className="font-bold text-red-500">-£{(reportData?.totalCost || 0).toLocaleString()}</p>
+                      <p className="font-bold text-red-500">-£{totalReconCost.toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
@@ -336,21 +340,21 @@ export default function Home() {
               {/* Cost Summary Card */}
               <div className="bg-yellow-500 p-6 rounded-3xl text-slate-950 shadow-2xl shadow-yellow-500/20 relative overflow-hidden">
                 <div className="relative z-10">
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mb-1 block">Est. Recon Cost</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mb-1 block">Total Recon Cost</span>
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-black tracking-tighter flex items-center leading-none">
-                       £{reportData ? reportData.totalCost : detectedIssues.reduce((acc, curr) => acc + curr.cost, 0)}
+                       £{totalReconCost.toLocaleString()}
                     </span>
                   </div>
-                  <p className="text-xs mt-2 font-medium opacity-70 italic">Calculated using average regional labor rates.</p>
+                  <p className="text-xs mt-2 font-medium opacity-70 italic">{reports.length} panels analyzed.</p>
                 </div>
                 <Zap className="absolute -bottom-4 -right-4 w-24 h-24 text-slate-950 opacity-10" />
               </div>
 
               {/* Damage Breakdown */}
               <div className="space-y-3">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4 ml-1">Detected Defects</h3>
-                {(reportData ? reportData.defects : detectedIssues).map((issue: any) => (
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4 ml-1">Cumulative Defects</h3>
+                {reports.flatMap(r => r.defects).map((issue: any, i: number) => (
                   <div key={issue.id} className="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center">
@@ -459,7 +463,17 @@ export default function Home() {
             </div>
 
             {/* Bottom Actions */}
-            <div className="absolute bottom-0 left-0 w-full p-6 bg-slate-950/80 backdrop-blur-xl border-t border-slate-800/50">
+            <div className="absolute bottom-0 left-0 w-full p-6 bg-slate-950/80 backdrop-blur-xl border-t border-slate-800/50 flex flex-col gap-3">
+              <button 
+                onClick={() => {
+                   setAnalyzingImage(false);
+                   setStep("scanning");
+                }}
+                className="w-full bg-slate-800 text-white font-bold py-4 rounded-2xl uppercase tracking-widest text-xs flex items-center justify-center gap-2 border border-slate-700"
+              >
+                 <Camera className="w-4 h-4" />
+                 Scan Another Panel
+              </button>
               <button className="w-full bg-white text-slate-950 font-black py-5 rounded-2xl uppercase tracking-widest text-sm flex items-center justify-center gap-2 shadow-2xl">
                  Generate Official Valuation
                  <ChevronRight className="w-4 h-4" />
