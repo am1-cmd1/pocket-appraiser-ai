@@ -289,7 +289,7 @@ export default function Home() {
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(2,6,23,0.4)_100%)] pointer-events-none" />
             </div>
 
-            {/* Scanning HUD */}
+            {/* Scanning HUD Overlay */}
             <div className="relative z-30 h-full flex flex-col p-6 pointer-events-none">
               <div className="flex justify-between items-start">
                 <div className="hud-border bg-slate-950/80 backdrop-blur-md p-3 rounded-xl flex items-center gap-3">
@@ -319,17 +319,36 @@ export default function Home() {
                 ))}
               </div>
 
-              <div className="mt-auto pointer-events-auto">
+              {/* Centered Reticle */}
+              <div className="flex-1 flex items-center justify-center">
+                 <div className="w-48 h-48 border-2 border-white/20 rounded-full relative flex items-center justify-center">
+                    <div className="w-1 h-1 bg-yellow-500 rounded-full shadow-[0_0_10px_#eab308]" />
+                    <div className="absolute inset-0 border-t-2 border-yellow-500/50 rounded-full animate-spin [animation-duration:3s]" />
+                 </div>
+              </div>
+
+              {/* Bottom Control Bar */}
+              <div className="mt-auto pointer-events-auto -mx-6 -mb-6 bg-slate-950/80 backdrop-blur-2xl border-t border-white/10 p-8 pb-12 flex flex-col items-center gap-4 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
                 {!analyzingImage ? (
-                  <button 
-                    onClick={captureAndAnalyze}
-                    className="w-full bg-yellow-500 text-slate-950 font-black py-6 rounded-2xl uppercase tracking-[0.2em] shadow-2xl flex items-center justify-center gap-3 mb-4"
-                  >
-                    <Zap className="w-5 h-5 fill-slate-950" />
-                    Analyze Panel
-                  </button>
+                  <div className="w-full flex flex-col items-center">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mb-4">Center defect in reticle</p>
+                    <button 
+                      onClick={captureAndAnalyze}
+                      className="w-24 h-24 bg-yellow-500 rounded-full shadow-[0_0_30px_rgba(234,179,8,0.4)] flex items-center justify-center group active:scale-95 transition-transform"
+                    >
+                      <div className="w-20 h-20 border-4 border-slate-950/20 rounded-full flex items-center justify-center">
+                         <Zap className="w-8 h-8 fill-slate-950" />
+                      </div>
+                    </button>
+                    <button 
+                      onClick={() => setStep("intro")}
+                      className="mt-6 text-slate-500 text-[10px] font-black uppercase tracking-widest hover:text-white"
+                    >
+                      Cancel Scan
+                    </button>
+                  </div>
                 ) : (
-                  <>
+                  <div className="w-full">
                     <div className="mb-4 flex justify-between items-end">
                       <div>
                         <h2 className="text-2xl font-bold uppercase tracking-tighter">Analyzing Surface</h2>
@@ -337,14 +356,14 @@ export default function Home() {
                       </div>
                       <span className="text-3xl font-black font-mono tabular-nums text-yellow-500">{progress}%</span>
                     </div>
-                    <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden mb-8 border border-slate-700/50">
+                    <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50">
                       <motion.div 
                         className="h-full bg-yellow-500"
                         initial={{ width: 0 }}
                         animate={{ width: `${progress}%` }}
                       />
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
             </div>
