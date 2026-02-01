@@ -17,6 +17,7 @@ export default function Home() {
     { vrm: "GJ21 XOW", vehicle: "SKODA SCALA", status: "Report Ready", cost: 285, date: "10m ago" },
     { vrm: "MW71 CVV", vehicle: "BMW 520D", status: "Sold", cost: 140, date: "1h ago" }
   ]);
+  const [activeTab, setActiveTab] = useState<"home" | "history" | "stats">("home");
   const [progress, setProgress] = useState(0);
   const [analyzingImage, setAnalyzingImage] = useState<boolean>(false);
   const [reportData, setReportData] = useState<any>(null);
@@ -24,7 +25,14 @@ export default function Home() {
   const [stream, setStream] = useState<MediaStream | null>(null);
 
   const startScan = async () => {
-    const inputVrm = prompt("Enter Vehicle Registration (e.g. GJ21 XOW):") || "UNKNOWN";
+    // Check if on mobile to avoid prompt if possible
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    let inputVrm = "SCANNING...";
+    
+    if (!isMobile) {
+      inputVrm = prompt("Enter Vehicle Registration (e.g. GJ21 XOW):") || "UNKNOWN";
+    }
+    
     setVrm(inputVrm);
 
     // Fetch valuation in background
@@ -171,134 +179,169 @@ export default function Home() {
                </div>
             </div>
 
-            {/* Services Grid - Modular Suite */}
-            <div className="space-y-8 mb-12">
-               <div>
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600 mb-4 ml-1">Vehicle Appraisal (Vision AI)</h3>
-                  <div className="grid grid-cols-1 gap-3">
-                     <button 
-                        onClick={startScan}
-                        className="w-full group bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold p-5 rounded-3xl transition-all shadow-2xl flex items-center justify-between gap-4"
-                     >
-                        <div className="flex items-center gap-4">
-                           <Camera className="w-6 h-6" />
-                           <div className="text-left">
-                              <p className="text-sm font-black uppercase leading-none">Full 360° HUD Scan</p>
-                              <p className="text-[10px] opacity-70 font-medium mt-1">Stitch multiple panels & detect damage</p>
+            {activeTab === "home" && (
+               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  {/* Services Grid - Modular Suite */}
+                  <div className="space-y-8 mb-12">
+                     <div>
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600 mb-4 ml-1">Vehicle Appraisal (Vision AI)</h3>
+                        <div className="grid grid-cols-1 gap-3">
+                           <button 
+                              onClick={startScan}
+                              className="w-full group bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold p-5 rounded-3xl transition-all shadow-2xl flex items-center justify-between gap-4"
+                           >
+                              <div className="flex items-center gap-4">
+                                 <Camera className="w-6 h-6" />
+                                 <div className="text-left">
+                                    <p className="text-sm font-black uppercase leading-none">Full 360° HUD Scan</p>
+                                    <p className="text-[10px] opacity-70 font-medium mt-1">Stitch multiple panels & detect damage</p>
+                                 </div>
+                              </div>
+                              <ChevronRight className="w-5 h-5 opacity-50" />
+                           </button>
+                           
+                           <div className="grid grid-cols-2 gap-3">
+                              <button 
+                                 onClick={startScan}
+                                 className="bg-slate-900 border border-slate-800 p-4 rounded-3xl text-left space-y-2 group hover:border-blue-500/50 transition-colors"
+                              >
+                                 <Zap className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform" />
+                                 <div>
+                                    <p className="text-[10px] font-black uppercase text-white">Tire Depth</p>
+                                    <p className="text-[8px] text-slate-500 uppercase font-bold">Vision Analysis</p>
+                                 </div>
+                              </button>
+                              <button 
+                                 onClick={startScan}
+                                 className="bg-slate-900 border border-slate-800 p-4 rounded-3xl text-left space-y-2 group hover:border-red-500/50 transition-colors"
+                              >
+                                 <ShieldAlert className="w-5 h-5 text-red-500 group-hover:scale-110 transition-transform" />
+                                 <div>
+                                    <p className="text-[10px] font-black uppercase text-white">Structural</p>
+                                    <p className="text-[8px] text-slate-500 uppercase font-bold">Panel Gap Check</p>
+                                 </div>
+                              </button>
                            </div>
-                        </div>
-                        <ChevronRight className="w-5 h-5 opacity-50" />
-                     </button>
-                     
-                     <div className="grid grid-cols-2 gap-3">
-                        <button 
-                           onClick={startScan}
-                           className="bg-slate-900 border border-slate-800 p-4 rounded-3xl text-left space-y-2 group hover:border-blue-500/50 transition-colors"
-                        >
-                           <Zap className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform" />
-                           <div>
-                              <p className="text-[10px] font-black uppercase text-white">Tire Depth</p>
-                              <p className="text-[8px] text-slate-500 uppercase font-bold">Vision Analysis</p>
-                           </div>
-                        </button>
-                        <button 
-                           onClick={startScan}
-                           className="bg-slate-900 border border-slate-800 p-4 rounded-3xl text-left space-y-2 group hover:border-red-500/50 transition-colors"
-                        >
-                           <ShieldAlert className="w-5 h-5 text-red-500 group-hover:scale-110 transition-transform" />
-                           <div>
-                              <p className="text-[10px] font-black uppercase text-white">Structural</p>
-                              <p className="text-[8px] text-slate-500 uppercase font-bold">Panel Gap Check</p>
-                           </div>
-                        </button>
-                     </div>
-                  </div>
-               </div>
-
-               <div>
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600 mb-4 ml-1">Due Diligence & Admin</h3>
-                  <div className="grid grid-cols-1 gap-3">
-                     <button 
-                        onClick={() => setStep("service")}
-                        className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl text-left flex items-center justify-between group hover:border-green-500/50 transition-colors"
-                     >
-                        <div className="flex items-center gap-4">
-                           <FileText className="w-6 h-6 text-green-500 group-hover:scale-110 transition-transform" />
-                           <div>
-                              <p className="text-sm font-black uppercase leading-none text-white">Service History OCR</p>
-                              <p className="text-[10px] text-slate-500 font-medium mt-1">Digitize stamps & verify mileage</p>
-                           </div>
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-slate-700" />
-                     </button>
-
-                     <button 
-                        onClick={() => setStep("hpi")}
-                        className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl text-left flex items-center justify-between group hover:border-purple-500/50 transition-colors"
-                     >
-                        <div className="flex items-center gap-4">
-                           <Search className="w-6 h-6 text-purple-500 group-hover:scale-110 transition-transform" />
-                           <div>
-                              <p className="text-sm font-black uppercase leading-none text-white">HPI & Finance Check</p>
-                              <p className="text-[10px] text-slate-500 font-medium mt-1">Real-time theft & write-off data</p>
-                           </div>
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-slate-700" />
-                     </button>
-                  </div>
-               </div>
-            </div>
-
-            {/* Dashboard Stats */}
-            <div className="grid grid-cols-3 gap-3 mb-10">
-               <div className="bg-slate-900/50 p-4 rounded-2xl border border-slate-800/50">
-                  <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Scans</p>
-                  <p className="text-xl font-black">124</p>
-               </div>
-               <div className="bg-slate-900/50 p-4 rounded-2xl border border-slate-800/50">
-                  <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Recon Est.</p>
-                  <p className="text-xl font-black text-red-500">£12.4k</p>
-               </div>
-               <div className="bg-slate-900/50 p-4 rounded-2xl border border-slate-800/50">
-                  <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Avg Margin</p>
-                  <p className="text-xl font-black text-green-500">18%</p>
-               </div>
-            </div>
-
-            {/* Recent Activity */}
-            <div className="space-y-4">
-               <div className="flex justify-between items-center px-1">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Recent Appraisals</h3>
-                  <button className="text-[8px] font-bold text-blue-500 uppercase hover:underline">View All</button>
-               </div>
-               
-               <div className="space-y-2">
-                  {history.map((item, i) => (
-                     <div key={i} className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl flex justify-between items-center">
-                        <div className="flex items-center gap-4">
-                           <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center font-mono text-[10px] font-black">
-                              {item.vrm.slice(0,2)}
-                           </div>
-                           <div>
-                              <h4 className="font-bold text-sm">{item.vehicle}</h4>
-                              <p className="text-[10px] text-slate-500 font-mono">{item.vrm} • {item.date}</p>
-                           </div>
-                        </div>
-                        <div className="text-right">
-                           <p className="text-xs font-black text-yellow-500">£{item.cost}</p>
-                           <p className="text-[8px] font-bold text-slate-600 uppercase">{item.status}</p>
                         </div>
                      </div>
-                  ))}
-               </div>
-            </div>
+
+                     <div>
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600 mb-4 ml-1">Due Diligence & Admin</h3>
+                        <div className="grid grid-cols-1 gap-3">
+                           <button 
+                              onClick={() => setStep("service")}
+                              className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl text-left flex items-center justify-between group hover:border-green-500/50 transition-colors"
+                           >
+                              <div className="flex items-center gap-4">
+                                 <FileText className="w-6 h-6 text-green-500 group-hover:scale-110 transition-transform" />
+                                 <div>
+                                    <p className="text-sm font-black uppercase leading-none text-white">Service History OCR</p>
+                                    <p className="text-[10px] text-slate-500 font-medium mt-1">Digitize stamps & verify mileage</p>
+                                 </div>
+                              </div>
+                              <ChevronRight className="w-5 h-5 text-slate-700" />
+                           </button>
+
+                           <button 
+                              onClick={() => setStep("hpi")}
+                              className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl text-left flex items-center justify-between group hover:border-purple-500/50 transition-colors"
+                           >
+                              <div className="flex items-center gap-4">
+                                 <Search className="w-6 h-6 text-purple-500 group-hover:scale-110 transition-transform" />
+                                 <div>
+                                    <p className="text-sm font-black uppercase leading-none text-white">HPI & Finance Check</p>
+                                    <p className="text-[10px] text-slate-500 font-medium mt-1">Real-time theft & write-off data</p>
+                                 </div>
+                              </div>
+                              <ChevronRight className="w-5 h-5 text-slate-700" />
+                           </button>
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Dashboard Stats */}
+                  <div className="grid grid-cols-3 gap-3 mb-10">
+                     <div className="bg-slate-900/50 p-4 rounded-2xl border border-slate-800/50">
+                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Scans</p>
+                        <p className="text-xl font-black">124</p>
+                     </div>
+                     <div className="bg-slate-900/50 p-4 rounded-2xl border border-slate-800/50">
+                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Recon Est.</p>
+                        <p className="text-xl font-black text-red-500">£12.4k</p>
+                     </div>
+                     <div className="bg-slate-900/50 p-4 rounded-2xl border border-slate-800/50">
+                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Avg Margin</p>
+                        <p className="text-xl font-black text-green-500">18%</p>
+                     </div>
+                  </div>
+               </motion.div>
+            )}
+
+            {activeTab === "history" && (
+               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                  <div className="flex justify-between items-center px-1">
+                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Recent Appraisals</h3>
+                     <button className="text-[8px] font-bold text-blue-500 uppercase hover:underline">Filter</button>
+                  </div>
+                  
+                  <div className="space-y-2">
+                     {history.map((item, i) => (
+                        <div key={i} className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl flex justify-between items-center">
+                           <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center font-mono text-[10px] font-black">
+                                 {item.vrm.slice(0,2)}
+                              </div>
+                              <div>
+                                 <h4 className="font-bold text-sm">{item.vehicle}</h4>
+                                 <p className="text-[10px] text-slate-500 font-mono">{item.vrm} • {item.date}</p>
+                              </div>
+                           </div>
+                           <div className="text-right">
+                              <p className="text-xs font-black text-yellow-500">£{item.cost}</p>
+                              <p className="text-[8px] font-bold text-slate-600 uppercase">{item.status}</p>
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+               </motion.div>
+            )}
+
+            {activeTab === "stats" && (
+               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600 ml-1">Performance Metrics</h3>
+                  <div className="bg-slate-900/50 p-6 rounded-3xl border border-slate-800/50">
+                     <div className="flex justify-between items-end mb-4">
+                        <p className="text-xs font-bold text-slate-400">Inventory Value</p>
+                        <p className="text-2xl font-black">£2.4M</p>
+                     </div>
+                     <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                        <div className="w-[65%] h-full bg-blue-500" />
+                     </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                     <div className="bg-slate-900/50 p-4 rounded-2xl border border-slate-800/50 text-center">
+                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Turnover</p>
+                        <p className="text-lg font-black text-green-500">14 Days</p>
+                     </div>
+                     <div className="bg-slate-900/50 p-4 rounded-2xl border border-slate-800/50 text-center">
+                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Missed Opps</p>
+                        <p className="text-lg font-black text-red-500">4%</p>
+                     </div>
+                  </div>
+               </motion.div>
+            )}
 
             {/* Bottom Floating Nav Hint */}
             <div className="fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 bg-slate-900/80 backdrop-blur-xl border border-white/5 rounded-full flex gap-8 items-center shadow-2xl">
-               <Zap className="w-4 h-4 text-yellow-500" />
-               <History className="w-4 h-4 text-slate-600" />
-               <Star className="w-4 h-4 text-slate-600" />
-               <Search className="w-4 h-4 text-slate-600" />
+               <button onClick={() => setActiveTab("home")} className={`transition-colors ${activeTab === 'home' ? 'text-yellow-500' : 'text-slate-600'}`}>
+                  <Zap className="w-5 h-5" />
+               </button>
+               <button onClick={() => setActiveTab("history")} className={`transition-colors ${activeTab === 'history' ? 'text-blue-500' : 'text-slate-600'}`}>
+                  <History className="w-5 h-5" />
+               </button>
+               <button onClick={() => setActiveTab("stats")} className={`transition-colors ${activeTab === 'stats' ? 'text-green-500' : 'text-slate-600'}`}>
+                  <DollarSign className="w-5 h-5" />
+               </button>
             </div>
           </motion.div>
         )}
