@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Camera, AlertCircle, CheckCircle2, Search, Zap, DollarSign, History, ChevronRight, X, MapPin, Star, Calendar, ShieldAlert, FileText, Info } from "lucide-react";
 
 export default function Home() {
-  const [step, setStep] = useState<"intro" | "scanning" | "report" | "upload" | "service">("intro");
+  const [step, setStep] = useState<"intro" | "scanning" | "report" | "upload" | "service" | "hpi">("intro");
   const [vrm, setVrm] = useState("");
+  const [analyzingHPI, setAnalyzingHPI] = useState<boolean>(false);
   const [serviceHistory, setServiceHistory] = useState<any>(null);
   const [valuationData, setValuationData] = useState<any>(null);
   const [detectedIssues, setDetectedIssues] = useState<any[]>([]);
@@ -190,17 +191,23 @@ export default function Home() {
                      </button>
                      
                      <div className="grid grid-cols-2 gap-3">
-                        <button className="bg-slate-900 border border-slate-800 p-4 rounded-3xl text-left space-y-2 group hover:border-blue-500/50 transition-colors">
+                        <button 
+                           onClick={startScan}
+                           className="bg-slate-900 border border-slate-800 p-4 rounded-3xl text-left space-y-2 group hover:border-blue-500/50 transition-colors"
+                        >
                            <Zap className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform" />
                            <div>
-                              <p className="text-[10px] font-black uppercase">Tire Depth</p>
+                              <p className="text-[10px] font-black uppercase text-white">Tire Depth</p>
                               <p className="text-[8px] text-slate-500 uppercase font-bold">Vision Analysis</p>
                            </div>
                         </button>
-                        <button className="bg-slate-900 border border-slate-800 p-4 rounded-3xl text-left space-y-2 group hover:border-red-500/50 transition-colors">
+                        <button 
+                           onClick={startScan}
+                           className="bg-slate-900 border border-slate-800 p-4 rounded-3xl text-left space-y-2 group hover:border-red-500/50 transition-colors"
+                        >
                            <ShieldAlert className="w-5 h-5 text-red-500 group-hover:scale-110 transition-transform" />
                            <div>
-                              <p className="text-[10px] font-black uppercase">Structural</p>
+                              <p className="text-[10px] font-black uppercase text-white">Structural</p>
                               <p className="text-[8px] text-slate-500 uppercase font-bold">Panel Gap Check</p>
                            </div>
                         </button>
@@ -225,7 +232,10 @@ export default function Home() {
                         <ChevronRight className="w-5 h-5 text-slate-700" />
                      </button>
 
-                     <button className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl text-left flex items-center justify-between group hover:border-purple-500/50 transition-colors">
+                     <button 
+                        onClick={() => setStep("hpi")}
+                        className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl text-left flex items-center justify-between group hover:border-purple-500/50 transition-colors"
+                     >
                         <div className="flex items-center gap-4">
                            <Search className="w-6 h-6 text-purple-500 group-hover:scale-110 transition-transform" />
                            <div>
@@ -362,6 +372,66 @@ export default function Home() {
                 <div className="flex-1 flex flex-col items-center justify-center">
                    <div className="w-full h-1 bg-blue-500 animate-[scan_2s_linear_infinite]" />
                    <p className="mt-8 font-mono text-xs uppercase tracking-widest text-blue-500 animate-pulse">Digitizing Service Records...</p>
+                </div>
+             )}
+          </motion.div>
+        )}
+
+        {step === "hpi" && (
+           <motion.div 
+            key="hpi"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 z-50 flex flex-col bg-slate-950 p-6"
+          >
+             <div className="flex justify-between items-center mb-8">
+                <h2 className="text-xl font-black uppercase italic">HPI Deep Check</h2>
+                <button onClick={() => setStep("intro")}><X className="w-6 h-6" /></button>
+             </div>
+             
+             {!analyzingHPI ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center">
+                   <div className="w-24 h-24 bg-purple-500/10 rounded-3xl flex items-center justify-center mb-6 border border-purple-500/20">
+                      <Search className="w-12 h-12 text-purple-500" />
+                   </div>
+                   <h3 className="text-2xl font-bold mb-4 uppercase italic">Run National Database Check</h3>
+                   <p className="text-slate-500 text-sm mb-12 max-w-xs text-center">Instantly verify finance status, theft records, and insurance write-off categories across all UK databases.</p>
+                   
+                   <div className="w-full space-y-4">
+                      <input 
+                        type="text" 
+                        placeholder="ENTER REG (E.G. LB73 JKK)"
+                        className="w-full bg-slate-900 border border-slate-800 p-5 rounded-2xl text-center font-mono text-xl uppercase tracking-widest outline-none focus:border-purple-500 transition-colors"
+                        onChange={(e) => setVrm(e.target.value)}
+                      />
+                      <button 
+                        onClick={async () => {
+                           setAnalyzingHPI(true);
+                           const res = await fetch(`/api/valuation?vrm=${vrm}`);
+                           const data = await res.json();
+                           setValuationData(data);
+                           setTimeout(() => {
+                              setAnalyzingHPI(false);
+                              setStep("report");
+                           }, 2000);
+                        }}
+                        className="w-full bg-purple-600 py-5 rounded-2xl font-bold uppercase tracking-widest text-sm shadow-2xl shadow-purple-500/20"
+                      >
+                         Run Verification
+                      </button>
+                   </div>
+                </div>
+             ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-center">
+                   <div className="w-full max-w-xs h-1 bg-slate-800 rounded-full overflow-hidden relative">
+                      <motion.div 
+                        className="absolute inset-0 bg-purple-500"
+                        initial={{ left: "-100%" }}
+                        animate={{ left: "100%" }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                      />
+                   </div>
+                   <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.3em] text-purple-500 animate-pulse">Querying National Databases...</p>
                 </div>
              )}
           </motion.div>
