@@ -99,9 +99,17 @@ export default function Home() {
           headers: { "Content-Type": "application/json" }
         });
         const data = await res.json();
+        
+        if (data.error) {
+            alert(data.error);
+            setAnalyzingImage(false);
+            return;
+        }
+
         setReportData(data);
       } catch (e) {
         console.error(e);
+        setAnalyzingImage(false);
       }
     }
   };
