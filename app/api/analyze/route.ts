@@ -27,13 +27,14 @@ export async function POST(req: NextRequest) {
       3. Structural Red Flags: Check for bolt head scoring (paint chips on wing/hood bolts), inner wing ripples, or non-factory welds (MIG beads vs circular spot welds).
 
       Identify:
-      1. The specific car panel. Use standard terms: Front, Rear, Left Side, Right Side, Front Left, Front Right, Rear Left, Rear Right.
-      2. The type of damage (Scratch, Dent, Scuff, Chip).
+      1. The specific car panel. Use standard terms: Front, Rear, Left Side, Right Side, Front Left, Front Right, Rear Left, Rear Right, Wheel/Tire.
+      2. The type of damage (Scratch, Dent, Scuff, Chip, Tire Wear).
       3. The severity (Minor, Moderate, Severe).
-      4. Structural Integrity Check:
+      4. Structural & Detail Check:
          - Panel Gap Alignment: (OK | IRREGULAR)
          - Paint Depth Match: (MATCH | MISMATCH)
          - Prior Repair: (NONE | DETECTED)
+         - Tire Depth (If wheel seen): Estimate in mm (e.g. 3mm).
       5. Provide a realistic estimate for the repair cost in GBP (British Pounds) based on UK labor rates.
       
       IMPORTANT: You must return ONLY a JSON object with this exact structure:
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest) {
            "gaps": "OK | IRREGULAR",
            "paint": "MATCH | MISMATCH",
            "priorRepair": "NONE | DETECTED",
+           "tireDepth": "string (optional depth in mm)",
            "warning": "string (A detailed pro-level warning if issues detected, mentioning specific red flags like 'tapering gaps' or 'overspray detected on trim')"
         },
         "recommendation": "string",

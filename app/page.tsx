@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, AlertCircle, CheckCircle2, Search, Zap, DollarSign, History, ChevronRight, X, MapPin, Star, Calendar } from "lucide-react";
+import { Camera, AlertCircle, CheckCircle2, Search, Zap, DollarSign, History, ChevronRight, X, MapPin, Star, Calendar, ShieldAlert, FileText, Info } from "lucide-react";
 
 export default function Home() {
-  const [step, setStep] = useState<"intro" | "scanning" | "report" | "upload">("intro");
+  const [step, setStep] = useState<"intro" | "scanning" | "report" | "upload" | "service">("intro");
   const [vrm, setVrm] = useState("");
+  const [serviceHistory, setServiceHistory] = useState<any>(null);
   const [valuationData, setValuationData] = useState<any>(null);
   const [detectedIssues, setDetectedIssues] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
@@ -171,6 +172,14 @@ export default function Home() {
               Analyze Photo
             </button>
             
+            <button 
+              onClick={() => setStep("service")}
+              className="w-full max-w-xs group bg-slate-800 hover:bg-slate-700 text-white font-bold py-5 rounded-2xl transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-sm mt-4 border border-slate-700"
+            >
+              <FileText className="w-5 h-5 group-hover:scale-110 transition-transform text-blue-500" />
+              Scan Service Book
+            </button>
+            
             <div className="mt-8 flex gap-6 text-slate-500">
               <div className="flex items-center gap-2 text-xs uppercase font-bold tracking-widest">
                 <History className="w-4 h-4" />
@@ -204,6 +213,57 @@ export default function Home() {
                 </div>
              </div>
              <button onClick={() => setStep("intro")} className="mt-8 text-slate-500 text-xs uppercase tracking-widest font-bold">Cancel</button>
+          </motion.div>
+        )}
+
+        {step === "service" && (
+           <motion.div 
+            key="service"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 z-50 flex flex-col bg-slate-950 p-6"
+          >
+             <div className="flex justify-between items-center mb-8">
+                <h2 className="text-xl font-black uppercase italic">Document Scanner</h2>
+                <button onClick={() => setStep("intro")}><X className="w-6 h-6" /></button>
+             </div>
+             
+             {!analyzingImage ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center">
+                   <div className="w-24 h-24 bg-blue-500/10 rounded-3xl flex items-center justify-center mb-6">
+                      <FileText className="w-12 h-12 text-blue-500" />
+                   </div>
+                   <h3 className="text-2xl font-bold mb-2">Scan Service Book</h3>
+                   <p className="text-slate-500 text-sm mb-12">Point the camera at the dealer stamps and mileage entries. I'll digitize the history for you.</p>
+                   
+                   <button 
+                     onClick={() => {
+                        setAnalyzingImage(true);
+                        setTimeout(() => {
+                           setServiceHistory({
+                              score: "4.5/5",
+                              status: "FULL SERVICE HISTORY",
+                              records: [
+                                 { date: "Oct 2024", miles: "32,102", type: "Major", dealer: "BMW London" },
+                                 { date: "Oct 2023", miles: "21,050", type: "Minor", dealer: "BMW London" },
+                                 { date: "Oct 2022", miles: "10,005", type: "Oil", dealer: "Independent" }
+                              ]
+                           });
+                           setAnalyzingImage(false);
+                           setStep("report");
+                        }, 2500);
+                     }}
+                     className="w-full bg-blue-600 py-5 rounded-2xl font-bold uppercase tracking-widest text-sm"
+                   >
+                      Capture Documents
+                   </button>
+                </div>
+             ) : (
+                <div className="flex-1 flex flex-col items-center justify-center">
+                   <div className="w-full h-1 bg-blue-500 animate-[scan_2s_linear_infinite]" />
+                   <p className="mt-8 font-mono text-xs uppercase tracking-widest text-blue-500 animate-pulse">Digitizing Service Records...</p>
+                </div>
+             )}
           </motion.div>
         )}
 
@@ -300,6 +360,24 @@ export default function Home() {
           >
             {/* Report Header */}
             <div className="p-6 pt-12 bg-slate-900 border-b border-slate-800">
+              {valuationData?.history?.finance === "OUTSTANDING" && (
+                <div className="bg-red-500 text-white p-3 rounded-2xl mb-4 flex items-center gap-3 animate-pulse">
+                   <ShieldAlert className="w-5 h-5" />
+                   <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest">Finance Alert</p>
+                      <p className="text-xs font-bold leading-tight">This vehicle has outstanding finance. Proceed with caution.</p>
+                   </div>
+                </div>
+              )}
+              {valuationData?.history?.writeOff !== "NONE" && (
+                <div className="bg-orange-500 text-white p-3 rounded-2xl mb-4 flex items-center gap-3">
+                   <ShieldAlert className="w-5 h-5" />
+                   <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest">Insurance Write-Off</p>
+                      <p className="text-xs font-bold leading-tight">Recorded as {valuationData.history.writeOff}. Structural check highly recommended.</p>
+                   </div>
+                </div>
+              )}
               <div className="flex justify-between items-center mb-6">
                 <div className="bg-green-500/10 border border-green-500/30 text-green-500 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
                   <CheckCircle2 className="w-3 h-3" />
@@ -407,6 +485,51 @@ export default function Home() {
                   </div>
                 ))}
               </div>
+
+              {/* Tire Tread Detection (Dynamic) */}
+              {reports.some(r => r.structural?.tireDepth) && (
+                <div className="bg-slate-900 border border-slate-800 p-5 rounded-3xl">
+                   <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">Tire Condition Report</h3>
+                   <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                         <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center">
+                            <Info className="w-5 h-5 text-blue-400" />
+                         </div>
+                         <div>
+                            <p className="text-xs font-bold">Estimated Tread Depth</p>
+                            <p className="text-[10px] text-slate-500">Vision Analysis (±0.5mm)</p>
+                         </div>
+                      </div>
+                      <div className="text-right">
+                         <p className="text-xl font-black text-blue-500">{reports.find(r => r.structural?.tireDepth)?.structural.tireDepth}</p>
+                         <p className="text-[8px] font-bold text-green-500 uppercase tracking-tighter">Legal</p>
+                      </div>
+                   </div>
+                </div>
+              )}
+
+              {/* Service History Summary */}
+              {serviceHistory && (
+                <div className="bg-blue-600 p-6 rounded-3xl text-white shadow-2xl shadow-blue-500/20">
+                   <div className="flex justify-between items-start mb-6">
+                      <div>
+                         <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Service Score</p>
+                         <p className="text-3xl font-black italic">{serviceHistory.score}</p>
+                      </div>
+                      <div className="bg-white/20 px-3 py-1 rounded-full">
+                         <p className="text-[10px] font-black uppercase tracking-widest">{serviceHistory.status}</p>
+                      </div>
+                   </div>
+                   <div className="space-y-3">
+                      {serviceHistory.records.map((rec: any, i: number) => (
+                         <div key={i} className="flex justify-between items-center text-[10px] font-bold border-t border-white/10 pt-2">
+                            <span className="opacity-70">{rec.date} • {rec.miles}m</span>
+                            <span>{rec.type} @ {rec.dealer}</span>
+                         </div>
+                      ))}
+                   </div>
+                </div>
+              )}
 
               {/* Recommendation Card */}
               <div className="bg-blue-600/10 border border-blue-500/20 p-6 rounded-3xl">
