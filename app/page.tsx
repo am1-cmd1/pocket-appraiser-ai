@@ -10,12 +10,41 @@ export default function Home() {
   const [progress, setProgress] = useState(0);
   const [analyzingImage, setAnalyzingImage] = useState<boolean>(false);
   const [reportData, setReportData] = useState<any>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
 
-  const startScan = () => {
+  const startScan = async () => {
     setStep("scanning");
     setDetectedIssues([]);
     setProgress(0);
+    
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: "environment" }, // Use back camera on mobile
+        audio: false 
+      });
+      setStream(mediaStream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (err) {
+      console.error("Camera access denied:", err);
+      alert("Please allow camera access to use the live scanner.");
+    }
   };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+  };
+
+  useEffect(() => {
+    if (step !== "scanning") {
+      stopCamera();
+    }
+  }, [step]);
 
   const startUpload = async () => {
     setStep("upload");
@@ -33,7 +62,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (step === "scanning") {
+    if (step === "scanning" && analyzingImage) {
       const interval = setInterval(() => {
         setProgress(prev => {
           if (prev >= 100) {
@@ -41,24 +70,27 @@ export default function Home() {
             setTimeout(() => setStep("report"), 500);
             return 100;
           }
-          
-          // Simulate detections at certain points
-          if (prev === 20 && detectedIssues.length === 0) {
-            setDetectedIssues([{ id: 1, part: "Front Bumper", type: "Scratch", severity: "Minor", cost: 120, pos: { top: '65%', left: '45%' } }]);
-          }
-          if (prev === 55 && detectedIssues.length === 1) {
-            setDetectedIssues(curr => [...curr, { id: 2, part: "Passenger Door", type: "Dent", severity: "Moderate", cost: 250, pos: { top: '55%', left: '75%' } }]);
-          }
-          if (prev === 85 && detectedIssues.length === 2) {
-             setDetectedIssues(curr => [...curr, { id: 3, part: "Rear Wheel", type: "Scuff", severity: "Minor", cost: 85, pos: { top: '70%', left: '85%' } }]);
-          }
-
-          return prev + 1;
+          return prev + 5;
         });
       }, 50);
       return () => clearInterval(interval);
     }
-  }, [step, detectedIssues]);
+  }, [step, analyzingImage]);
+
+  const captureAndAnalyze = async () => {
+    setAnalyzingImage(true);
+    setProgress(0);
+    
+    // In a real app, we would grab a frame from the videoRef here
+    // For now, we simulate the "Analysis" progress bar
+    try {
+      const res = await fetch("/api/analyze");
+      const data = await res.json();
+      setReportData(data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
     <div className="relative h-screen w-full bg-slate-950 overflow-hidden text-slate-100 select-none">
@@ -145,14 +177,18 @@ export default function Home() {
             exit={{ opacity: 0 }}
             className="absolute inset-0 z-20 flex flex-col"
           >
-            {/* Mock Camera View */}
-            <div className="absolute inset-0 bg-slate-900">
-              <img 
-                src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=2070" 
-                className="w-full h-full object-cover opacity-60 mix-blend-overlay grayscale"
-                alt="Car being scanned"
+            {/* Real Camera View */}
+            <div className="absolute inset-0 bg-black">
+              <video 
+                ref={videoRef}
+                autoPlay 
+                playsInline 
+                muted
+                className="w-full h-full object-cover opacity-80 grayscale contrast-125"
               />
               <div className="scanner-bar" />
+              {/* HUD Vignette */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(2,6,23,0.4)_100%)] pointer-events-none" />
             </div>
 
             {/* Scanning HUD */}
@@ -185,21 +221,33 @@ export default function Home() {
                 ))}
               </div>
 
-              <div className="mt-auto">
-                <div className="mb-4 flex justify-between items-end">
-                  <div>
-                    <h2 className="text-2xl font-bold uppercase tracking-tighter">Analyzing Panels</h2>
-                    <p className="text-[10px] font-mono text-slate-400">Current segment: Rear Quarter / OS</p>
-                  </div>
-                  <span className="text-3xl font-black font-mono tabular-nums text-yellow-500">{progress}%</span>
-                </div>
-                <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden mb-8 border border-slate-700/50">
-                  <motion.div 
-                    className="h-full bg-yellow-500"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                  />
-                </div>
+              <div className="mt-auto pointer-events-auto">
+                {!analyzingImage ? (
+                  <button 
+                    onClick={captureAndAnalyze}
+                    className="w-full bg-yellow-500 text-slate-950 font-black py-6 rounded-2xl uppercase tracking-[0.2em] shadow-2xl flex items-center justify-center gap-3 mb-4"
+                  >
+                    <Zap className="w-5 h-5 fill-slate-950" />
+                    Analyze Panel
+                  </button>
+                ) : (
+                  <>
+                    <div className="mb-4 flex justify-between items-end">
+                      <div>
+                        <h2 className="text-2xl font-bold uppercase tracking-tighter">Analyzing Surface</h2>
+                        <p className="text-[10px] font-mono text-slate-400">Processing specular reflections...</p>
+                      </div>
+                      <span className="text-3xl font-black font-mono tabular-nums text-yellow-500">{progress}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden mb-8 border border-slate-700/50">
+                      <motion.div 
+                        className="h-full bg-yellow-500"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
