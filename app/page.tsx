@@ -375,11 +375,49 @@ export default function Home() {
                    Expert Recommendation
                 </h3>
                 <p className="text-sm text-slate-400 leading-relaxed mb-4">
-                  Damage is primarily cosmetic. Expected time-to-recon: <span className="text-slate-100 font-medium">3 working days</span>. Proceed with trade-in but adjust offer by -15% for reconditioning buffer.
+                  {reportData?.recommendation || "Damage is primarily cosmetic. Expected time-to-recon: 3 working days. Proceed with trade-in but adjust offer by -15% for reconditioning buffer."}
                 </p>
                 <button className="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-colors shadow-lg shadow-blue-500/10">
                   Save to Inventory
                 </button>
+              </div>
+
+              {/* Accident & History Detection (Pro Feature) */}
+              <div className="bg-red-500/5 border border-red-500/20 p-6 rounded-3xl space-y-4">
+                 <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                    <h3 className="text-red-400 font-bold text-xs uppercase tracking-widest">Structural Integrity Check</h3>
+                 </div>
+                 
+                 <div className="grid grid-cols-1 gap-3">
+                    <div className="flex justify-between items-center bg-slate-900/50 p-3 rounded-xl">
+                       <span className="text-xs text-slate-400 font-medium">Panel Gap Alignment</span>
+                       <span className={reportData?.structural?.gaps === 'OK' ? "text-green-500 text-[10px] font-black" : "text-yellow-500 text-[10px] font-black"}>
+                          {reportData?.structural?.gaps || "PENDING"}
+                       </span>
+                    </div>
+                    <div className="flex justify-between items-center bg-slate-900/50 p-3 rounded-xl">
+                       <span className="text-xs text-slate-400 font-medium">Paint Depth Match</span>
+                       <span className={reportData?.structural?.paint === 'MATCH' ? "text-green-500 text-[10px] font-black" : "text-red-500 text-[10px] font-black"}>
+                          {reportData?.structural?.paint || "ANALYZING"}
+                       </span>
+                    </div>
+                    <div className="flex justify-between items-center bg-slate-900/50 p-3 rounded-xl">
+                       <span className="text-xs text-slate-400 font-medium">Prior Poor Repair</span>
+                       <span className={reportData?.structural?.priorRepair === 'NONE' ? "text-green-500 text-[10px] font-black" : "text-red-500 text-[10px] font-black"}>
+                          {reportData?.structural?.priorRepair || "READY"}
+                       </span>
+                    </div>
+                 </div>
+                 
+                 {reportData?.structural?.warning && (
+                    <div className="bg-red-500/10 p-3 rounded-xl border border-red-500/20 mt-2">
+                       <p className="text-[10px] text-red-400 font-bold leading-tight uppercase">
+                          <AlertCircle className="w-3 h-3 inline mr-1" />
+                          {reportData.structural.warning}
+                       </p>
+                    </div>
+                 )}
               </div>
 
               {/* Local Body Shops */}

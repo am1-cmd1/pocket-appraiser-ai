@@ -19,13 +19,22 @@ export async function POST(req: NextRequest) {
 
     const prompt = `
       Act as a professional automotive damage appraiser for a high-end UK body shop specializing in SMART repairs.
-      Analyze this photo of car damage. 
+      Analyze this photo of car damage with extreme precision. 
       
+      Look for these specific "Pro" indicators of hidden damage:
+      1. Panel Gap Irregularities: Are gaps between 3mm-5mm? Is there tapering (widening/narrowing) or asymmetry between sides?
+      2. Paint Surface Anomalies: Look for orange peel texture mismatch, overspray on rubber seals/trim, sanding marks under the clear coat, or hard tape lines in jambs.
+      3. Structural Red Flags: Check for bolt head scoring (paint chips on wing/hood bolts), inner wing ripples, or non-factory welds (MIG beads vs circular spot welds).
+
       Identify:
       1. The specific car panel (e.g., Front Bumper, Driver Door).
       2. The type of damage (Scratch, Dent, Scuff, Chip).
       3. The severity (Minor, Moderate, Severe).
-      4. Provide a realistic estimate for the repair cost in GBP (British Pounds) based on UK labor rates.
+      4. Structural Integrity Check:
+         - Panel Gap Alignment: (OK | IRREGULAR)
+         - Paint Depth Match: (MATCH | MISMATCH)
+         - Prior Repair: (NONE | DETECTED)
+      5. Provide a realistic estimate for the repair cost in GBP (British Pounds) based on UK labor rates.
       
       IMPORTANT: You must return ONLY a JSON object with this exact structure:
       {
@@ -41,6 +50,12 @@ export async function POST(req: NextRequest) {
             "details": "string"
           }
         ],
+        "structural": {
+           "gaps": "OK | IRREGULAR",
+           "paint": "MATCH | MISMATCH",
+           "priorRepair": "NONE | DETECTED",
+           "warning": "string (A detailed pro-level warning if issues detected, mentioning specific red flags like 'tapering gaps' or 'overspray detected on trim')"
+        },
         "recommendation": "string",
         "localShops": [
            { "name": "London SMART Repair", "distance": "1.2 miles", "rating": 4.8, "priceMatch": "£X - £Y", "availability": "Tomorrow", "specialty": "Bumper Scuffs" }
