@@ -78,17 +78,31 @@ export default function Home() {
   }, [step, analyzingImage]);
 
   const captureAndAnalyze = async () => {
+    if (!videoRef.current) return;
     setAnalyzingImage(true);
     setProgress(0);
     
-    // In a real app, we would grab a frame from the videoRef here
-    // For now, we simulate the "Analysis" progress bar
-    try {
-      const res = await fetch("/api/analyze");
-      const data = await res.json();
-      setReportData(data);
-    } catch (e) {
-      console.error(e);
+    // 1. Capture frame from Video to Canvas
+    const canvas = document.createElement("canvas");
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      const imageData = canvas.toDataURL("image/jpeg", 0.8);
+
+      // 2. Send to our "Brain" API
+      try {
+        const res = await fetch("/api/analyze", {
+          method: "POST",
+          body: JSON.stringify({ image: imageData }),
+          headers: { "Content-Type": "application/json" }
+        });
+        const data = await res.json();
+        setReportData(data);
+      } catch (e) {
+        console.error(e);
+      }
     }
   };
 
