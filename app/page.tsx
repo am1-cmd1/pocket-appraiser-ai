@@ -558,7 +558,7 @@ export default function Home() {
                    </div>
                 </div>
               )}
-              {valuationData?.history?.writeOff !== "NONE" && (
+              {valuationData?.history?.writeOff && valuationData?.history?.writeOff !== "NONE" && (
                 <div className="bg-orange-500 text-white p-3 rounded-2xl mb-4 flex items-center gap-3">
                    <ShieldAlert className="w-5 h-5" />
                    <div>
@@ -619,17 +619,17 @@ export default function Home() {
                   <div className="flex justify-between items-end border-b border-slate-800 pb-4">
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Retail Value</p>
-                      <p className="text-2xl font-black">£{valuationData.retailValue.toLocaleString()}</p>
+                      <p className="text-2xl font-black">£{(valuationData.retail || valuationData.retailValue || 0).toLocaleString()}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Target Buy Price</p>
-                      <p className="text-2xl font-black text-green-500">£{(valuationData.tradeValue - totalReconCost).toLocaleString()}</p>
+                      <p className="text-2xl font-black text-green-500">£{((valuationData.tradeValue || 0) - totalReconCost).toLocaleString()}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Est. Profit</p>
-                      <p className="font-bold text-slate-300">£{(valuationData.retailValue - valuationData.tradeValue).toLocaleString()}</p>
+                      <p className="font-bold text-slate-300">£{((valuationData.retail || valuationData.retailValue || 0) - (valuationData.tradeValue || 0)).toLocaleString()}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Recon Impact</p>
