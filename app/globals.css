@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-yellow: #eab308;
+  --color-brand-blue: #3b82f6;
+  --color-brand-dark: #0f172a;
+}
+
+:root {
+  --background: #020617;
+  --foreground: #f8fafc;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  overflow: hidden;
+}
+
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+.scanner-bar {
+  background: linear-gradient(to bottom, transparent, #eab308, transparent);
+  height: 100px;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0.5;
+  pointer-events: none;
+  animation: scan 4s linear infinite;
+}
+
+.hud-border {
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
