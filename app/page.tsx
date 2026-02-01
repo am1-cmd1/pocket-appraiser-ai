@@ -12,6 +12,10 @@ export default function Home() {
   const [detectedIssues, setDetectedIssues] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
   const [scannedPanels, setScannedPanels] = useState<string[]>([]);
+  const [history, setHistory] = useState<any[]>([
+    { vrm: "GJ21 XOW", vehicle: "SKODA SCALA", status: "Report Ready", cost: 285, date: "10m ago" },
+    { vrm: "MW71 CVV", vehicle: "BMW 520D", status: "Sold", cost: 140, date: "1h ago" }
+  ]);
   const [progress, setProgress] = useState(0);
   const [analyzingImage, setAnalyzingImage] = useState<boolean>(false);
   const [reportData, setReportData] = useState<any>(null);
@@ -21,18 +25,18 @@ export default function Home() {
   const startScan = async () => {
     const inputVrm = prompt("Enter Vehicle Registration (e.g. GJ21 XOW):") || "UNKNOWN";
     setVrm(inputVrm);
-    
+
     // Fetch valuation in background
     fetch(`/api/valuation?vrm=${inputVrm}`).then(res => res.json()).then(data => setValuationData(data));
 
     setStep("scanning");
     setDetectedIssues([]);
     setProgress(0);
-    
+
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" }, // Use back camera on mobile
-        audio: false 
+        audio: false
       });
       setStream(mediaStream);
       if (videoRef.current) {
@@ -60,7 +64,7 @@ export default function Home() {
   const startUpload = async () => {
     setStep("upload");
     setAnalyzingImage(true);
-    
+
     try {
       const res = await fetch("/api/analyze");
       const data = await res.json();
@@ -92,7 +96,7 @@ export default function Home() {
     if (!videoRef.current) return;
     setAnalyzingImage(true);
     setProgress(0);
-    
+
     // 1. Capture frame from Video to Canvas
     const canvas = document.createElement("canvas");
     canvas.width = videoRef.current.videoWidth;
@@ -110,7 +114,7 @@ export default function Home() {
           headers: { "Content-Type": "application/json" }
         });
         const data = await res.json();
-        
+
         if (data.error) {
             alert(data.error);
             setAnalyzingImage(false);
@@ -148,53 +152,108 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="relative z-10 h-full flex flex-col items-center justify-center p-6 text-center"
+            className="relative z-10 h-full flex flex-col p-6 overflow-y-auto pt-16 pb-32"
           >
-            <div className="w-20 h-20 bg-yellow-500/10 border border-yellow-500/30 rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-yellow-500/20">
-              <Zap className="w-10 h-10 text-yellow-500" />
+            {/* Header / Profile */}
+            <div className="flex justify-between items-center mb-10">
+               <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-yellow-500/20 border border-yellow-500/30 rounded-xl flex items-center justify-center">
+                     <Zap className="w-5 h-5 text-yellow-500" />
+                  </div>
+                  <div>
+                     <h1 className="text-xl font-black uppercase italic tracking-tighter leading-none">Pocket Appraiser<span className="text-yellow-500 ml-1">AI</span></h1>
+                     <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1">Dealer Dashboard • London SE1</p>
+                  </div>
+               </div>
+               <div className="w-10 h-10 rounded-full border border-slate-800 bg-slate-900 flex items-center justify-center">
+                  <Star className="w-4 h-4 text-slate-500" />
+               </div>
             </div>
-            <h1 className="text-4xl font-black tracking-tighter mb-2 italic uppercase">Pocket Appraiser<span className="text-yellow-500 text-base align-top ml-1">AI</span></h1>
-            <p className="text-slate-400 mb-12 max-w-sm">Instantly detect damage and calculate reconditioning costs via computer vision.</p>
-            
-            <button 
-              onClick={startScan}
-              className="w-full max-w-xs group bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold py-5 rounded-2xl transition-all shadow-xl shadow-yellow-500/20 flex items-center justify-center gap-3 uppercase tracking-widest text-sm"
-            >
-              <Camera className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              Live HUD Scan
-            </button>
 
-            <button 
-              onClick={startUpload}
-              className="w-full max-w-xs group bg-slate-800 hover:bg-slate-700 text-white font-bold py-5 rounded-2xl transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-sm mt-4 border border-slate-700"
-            >
-              <Search className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              Analyze Photo
-            </button>
-            
-            <button 
-              onClick={() => setStep("service")}
-              className="w-full max-w-xs group bg-slate-800 hover:bg-slate-700 text-white font-bold py-5 rounded-2xl transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-sm mt-4 border border-slate-700"
-            >
-              <FileText className="w-5 h-5 group-hover:scale-110 transition-transform text-blue-500" />
-              Scan Service Book
-            </button>
-            
-            <div className="mt-8 flex gap-6 text-slate-500">
-              <div className="flex items-center gap-2 text-xs uppercase font-bold tracking-widest">
-                <History className="w-4 h-4" />
-                History
-              </div>
-              <div className="flex items-center gap-2 text-xs uppercase font-bold tracking-widest">
-                <Search className="w-4 h-4" />
-                Settings
-              </div>
+            {/* Main Actions Area */}
+            <div className="space-y-4 mb-12">
+               <button 
+                  onClick={startScan}
+                  className="w-full group bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold py-6 rounded-3xl transition-all shadow-2xl shadow-yellow-500/10 flex items-center justify-center gap-4 uppercase tracking-[0.2em] text-sm"
+               >
+                  <Camera className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                  Live HUD Scan
+               </button>
+
+               <div className="grid grid-cols-2 gap-4">
+                  <button 
+                     onClick={startUpload}
+                     className="bg-slate-900 hover:bg-slate-800 text-white font-bold py-5 rounded-3xl transition-all flex flex-col items-center justify-center gap-2 border border-slate-800 shadow-xl"
+                  >
+                     <Search className="w-5 h-5 text-blue-500" />
+                     <span className="text-[10px] uppercase tracking-widest">Analyze Photo</span>
+                  </button>
+                  <button 
+                     onClick={() => setStep("service")}
+                     className="bg-slate-900 hover:bg-slate-800 text-white font-bold py-5 rounded-3xl transition-all flex flex-col items-center justify-center gap-2 border border-slate-800 shadow-xl"
+                  >
+                     <FileText className="w-5 h-5 text-green-500" />
+                     <span className="text-[10px] uppercase tracking-widest">Scan Service</span>
+                  </button>
+               </div>
+            </div>
+
+            {/* Dashboard Stats */}
+            <div className="grid grid-cols-3 gap-3 mb-10">
+               <div className="bg-slate-900/50 p-4 rounded-2xl border border-slate-800/50">
+                  <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Scans</p>
+                  <p className="text-xl font-black">124</p>
+               </div>
+               <div className="bg-slate-900/50 p-4 rounded-2xl border border-slate-800/50">
+                  <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Recon Est.</p>
+                  <p className="text-xl font-black text-red-500">£12.4k</p>
+               </div>
+               <div className="bg-slate-900/50 p-4 rounded-2xl border border-slate-800/50">
+                  <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Avg Margin</p>
+                  <p className="text-xl font-black text-green-500">18%</p>
+               </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="space-y-4">
+               <div className="flex justify-between items-center px-1">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Recent Appraisals</h3>
+                  <button className="text-[8px] font-bold text-blue-500 uppercase hover:underline">View All</button>
+               </div>
+               
+               <div className="space-y-2">
+                  {history.map((item, i) => (
+                     <div key={i} className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl flex justify-between items-center">
+                        <div className="flex items-center gap-4">
+                           <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center font-mono text-[10px] font-black">
+                              {item.vrm.slice(0,2)}
+                           </div>
+                           <div>
+                              <h4 className="font-bold text-sm">{item.vehicle}</h4>
+                              <p className="text-[10px] text-slate-500 font-mono">{item.vrm} • {item.date}</p>
+                           </div>
+                        </div>
+                        <div className="text-right">
+                           <p className="text-xs font-black text-yellow-500">£{item.cost}</p>
+                           <p className="text-[8px] font-bold text-slate-600 uppercase">{item.status}</p>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </div>
+
+            {/* Bottom Floating Nav Hint */}
+            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 bg-slate-900/80 backdrop-blur-xl border border-white/5 rounded-full flex gap-8 items-center shadow-2xl">
+               <Zap className="w-4 h-4 text-yellow-500" />
+               <History className="w-4 h-4 text-slate-600" />
+               <Star className="w-4 h-4 text-slate-600" />
+               <Search className="w-4 h-4 text-slate-600" />
             </div>
           </motion.div>
         )}
 
         {step === "upload" && (
-          <motion.div 
+          <motion.div
             key="upload"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -206,7 +265,7 @@ export default function Home() {
                 </div>
                 <h2 className="text-xl font-bold mb-2 uppercase italic">Snap & Appraise</h2>
                 <p className="text-slate-500 text-sm mb-6">Send a photo of car damage to Jeeves in Telegram. I will analyze it using Gemini Vision and display the results here.</p>
-                
+
                 <div className="flex items-center gap-2 text-yellow-500 animate-pulse font-mono text-xs uppercase tracking-[0.2em]">
                   <Zap className="w-4 h-4" />
                   Waiting for Image...
@@ -217,7 +276,7 @@ export default function Home() {
         )}
 
         {step === "service" && (
-           <motion.div 
+           <motion.div
             key="service"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -227,7 +286,7 @@ export default function Home() {
                 <h2 className="text-xl font-black uppercase italic">Document Scanner</h2>
                 <button onClick={() => setStep("intro")}><X className="w-6 h-6" /></button>
              </div>
-             
+
              {!analyzingImage ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center">
                    <div className="w-24 h-24 bg-blue-500/10 rounded-3xl flex items-center justify-center mb-6">
@@ -235,8 +294,8 @@ export default function Home() {
                    </div>
                    <h3 className="text-2xl font-bold mb-2">Scan Service Book</h3>
                    <p className="text-slate-500 text-sm mb-12">Point the camera at the dealer stamps and mileage entries. I'll digitize the history for you.</p>
-                   
-                   <button 
+
+                   <button
                      onClick={() => {
                         setAnalyzingImage(true);
                         setTimeout(() => {
@@ -268,7 +327,7 @@ export default function Home() {
         )}
 
         {step === "scanning" && (
-          <motion.div 
+          <motion.div
             key="scanning"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -277,10 +336,10 @@ export default function Home() {
           >
             {/* Real Camera View */}
             <div className="absolute inset-0 bg-black">
-              <video 
+              <video
                 ref={videoRef}
-                autoPlay 
-                playsInline 
+                autoPlay
+                playsInline
                 muted
                 className="w-full h-full object-cover opacity-80 grayscale contrast-125"
               />
@@ -332,7 +391,7 @@ export default function Home() {
                 {!analyzingImage ? (
                   <div className="w-full flex flex-col items-center">
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mb-4">Center defect in reticle</p>
-                    <button 
+                    <button
                       onClick={captureAndAnalyze}
                       className="w-24 h-24 bg-yellow-500 rounded-full shadow-[0_0_30px_rgba(234,179,8,0.4)] flex items-center justify-center group active:scale-95 transition-transform"
                     >
@@ -340,7 +399,7 @@ export default function Home() {
                          <Zap className="w-8 h-8 fill-slate-950" />
                       </div>
                     </button>
-                    <button 
+                    <button
                       onClick={() => setStep("intro")}
                       className="mt-6 text-slate-500 text-[10px] font-black uppercase tracking-widest hover:text-white"
                     >
@@ -357,7 +416,7 @@ export default function Home() {
                       <span className="text-3xl font-black font-mono tabular-nums text-yellow-500">{progress}%</span>
                     </div>
                     <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50">
-                      <motion.div 
+                      <motion.div
                         className="h-full bg-yellow-500"
                         initial={{ width: 0 }}
                         animate={{ width: `${progress}%` }}
@@ -371,7 +430,7 @@ export default function Home() {
         )}
 
         {step === "report" && (
-          <motion.div 
+          <motion.div
             key="report"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -416,14 +475,14 @@ export default function Home() {
 
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 pb-32">
-              
+
               {/* Stitching Visualization (Vehicle Map) */}
               <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl overflow-hidden relative">
                  <div className="flex justify-between items-center mb-6">
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500">360° Walkaround Progress</h3>
                     <span className="text-[10px] font-bold text-blue-500 uppercase">{scannedPanels.length} / 8 Panels Scanned</span>
                  </div>
-                 
+
                  <div className="flex justify-center gap-2 relative h-16">
                     {/* Visual representation of panels */}
                     {['Front', 'Front Left', 'Left Side', 'Rear Left', 'Rear', 'Rear Right', 'Right Side', 'Front Right'].map((panel) => {
@@ -436,7 +495,7 @@ export default function Home() {
                        )
                     })}
                  </div>
-                 
+
                  <div className="mt-4 flex items-center gap-4 text-[10px] font-bold text-slate-500 italic">
                     <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-500" /> Scanned</div>
                     <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-slate-800" /> Remaining</div>
@@ -569,7 +628,7 @@ export default function Home() {
                     <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                     <h3 className="text-red-400 font-bold text-xs uppercase tracking-widest">Structural Integrity Check</h3>
                  </div>
-                 
+
                  <div className="grid grid-cols-1 gap-3">
                     <div className="flex justify-between items-center bg-slate-900/50 p-3 rounded-xl">
                        <span className="text-xs text-slate-400 font-medium">Panel Gap Alignment</span>
@@ -590,7 +649,7 @@ export default function Home() {
                        </span>
                     </div>
                  </div>
-                 
+
                  {reportData?.structural?.warning && (
                     <div className="bg-red-500/10 p-3 rounded-xl border border-red-500/20 mt-2">
                        <p className="text-[10px] text-red-400 font-bold leading-tight uppercase">
@@ -641,7 +700,7 @@ export default function Home() {
 
             {/* Bottom Actions */}
             <div className="absolute bottom-0 left-0 w-full p-6 bg-slate-950/80 backdrop-blur-xl border-t border-slate-800/50 flex flex-col gap-3">
-              <button 
+              <button
                 onClick={() => {
                    setAnalyzingImage(false);
                    setStep("scanning");
