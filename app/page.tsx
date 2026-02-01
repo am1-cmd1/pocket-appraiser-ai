@@ -13,12 +13,23 @@ export default function Home() {
   const [detectedIssues, setDetectedIssues] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
   const [scannedPanels, setScannedPanels] = useState<string[]>([]);
-  const [history, setHistory] = useState<any[]>([
-    { vrm: "GJ21 XOW", vehicle: "SKODA SCALA", status: "Report Ready", cost: 285, date: "10m ago" },
-    { vrm: "MW71 CVV", vehicle: "BMW 520D", status: "Sold", cost: 140, date: "1h ago" }
-  ]);
+  const [history, setHistory] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"home" | "history" | "stats">("home");
   const [progress, setProgress] = useState(0);
+
+  // Load history from Supabase
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch("/api/reports");
+        const data = await res.json();
+        if (!data.error) setHistory(data);
+      } catch (err) {
+        console.error("Failed to fetch history:", err);
+      }
+    };
+    fetchHistory();
+  }, []);
   const [analyzingImage, setAnalyzingImage] = useState<boolean>(false);
   const [reportData, setReportData] = useState<any>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -771,7 +782,26 @@ export default function Home() {
                 <p className="text-sm text-slate-400 leading-relaxed mb-4">
                   {reportData?.recommendation || "Damage is primarily cosmetic. Expected time-to-recon: 3 working days. Proceed with trade-in but adjust offer by -15% for reconditioning buffer."}
                 </p>
-                <button className="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-colors shadow-lg shadow-blue-500/10">
+                <button 
+                  onClick={async () => {
+                    const res = await fetch("/api/reports", {
+                      method: "POST",
+                      body: JSON.stringify({
+                        vrm,
+                        vehicle: `${valuationData?.make} ${valuationData?.model}`,
+                        status: "Draft Saved",
+                        cost: totalReconCost,
+                        data: { reports, reportData, valuationData }
+                      }),
+                      headers: { "Content-Type": "application/json" }
+                    });
+                    if (res.ok) {
+                      alert("Appraisal saved to database!");
+                      setStep("intro");
+                    }
+                  }}
+                  className="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-colors shadow-lg shadow-blue-500/10"
+                >
                   Save to Inventory
                 </button>
               </div>
