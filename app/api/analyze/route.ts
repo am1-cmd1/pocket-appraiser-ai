@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
     // Convert base64 to parts for Gemini
     const base64Data = image.split(",")[1];
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
       Act as a professional automotive damage appraiser for a high-end UK body shop specializing in SMART repairs.
@@ -77,10 +77,14 @@ export async function POST(req: NextRequest) {
 
     const response = await result.response;
     const text = response.text();
+    console.log("Gemini Raw Response:", text);
     
     // Extract JSON from potential markdown code blocks
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    const analysis = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(text);
+    if (!jsonMatch) {
+        throw new Error("AI returned invalid JSON: " + text);
+    }
+    const analysis = JSON.parse(jsonMatch[0]);
 
     return NextResponse.json(analysis);
   } catch (error) {
