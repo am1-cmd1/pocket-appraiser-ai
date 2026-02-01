@@ -6,6 +6,8 @@ import { Camera, AlertCircle, CheckCircle2, Search, Zap, DollarSign, History, Ch
 
 export default function Home() {
   const [step, setStep] = useState<"intro" | "scanning" | "report" | "upload">("intro");
+  const [vrm, setVrm] = useState("");
+  const [valuationData, setValuationData] = useState<any>(null);
   const [detectedIssues, setDetectedIssues] = useState<any[]>([]);
   const [progress, setProgress] = useState(0);
   const [analyzingImage, setAnalyzingImage] = useState<boolean>(false);
@@ -14,6 +16,12 @@ export default function Home() {
   const [stream, setStream] = useState<MediaStream | null>(null);
 
   const startScan = async () => {
+    const inputVrm = prompt("Enter Vehicle Registration (e.g. GJ21 XOW):") || "UNKNOWN";
+    setVrm(inputVrm);
+    
+    // Fetch valuation in background
+    fetch(`/api/valuation?vrm=${inputVrm}`).then(res => res.json()).then(data => setValuationData(data));
+
     setStep("scanning");
     setDetectedIssues([]);
     setProgress(0);
@@ -294,11 +302,37 @@ export default function Home() {
                 </button>
               </div>
               <h2 className="text-3xl font-black uppercase tracking-tighter italic">Appraisal Report</h2>
-              <p className="text-slate-400 text-sm">Ref: #AP-44029 • BMW 320i M Sport</p>
+              <p className="text-slate-400 text-sm">Ref: #AP-44029 • {vrm.toUpperCase()}</p>
             </div>
 
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 pb-32">
+              {/* Profit/Margin Card */}
+              {valuationData && (
+                <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4">
+                  <div className="flex justify-between items-end border-b border-slate-800 pb-4">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Retail Value</p>
+                      <p className="text-2xl font-black">£{valuationData.retailValue.toLocaleString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Target Buy Price</p>
+                      <p className="text-2xl font-black text-green-500">£{(valuationData.tradeValue - (reportData?.totalCost || 0)).toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Est. Profit</p>
+                      <p className="font-bold text-slate-300">£{(valuationData.retailValue - valuationData.tradeValue).toLocaleString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Recon Impact</p>
+                      <p className="font-bold text-red-500">-£{(reportData?.totalCost || 0).toLocaleString()}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Cost Summary Card */}
               <div className="bg-yellow-500 p-6 rounded-3xl text-slate-950 shadow-2xl shadow-yellow-500/20 relative overflow-hidden">
                 <div className="relative z-10">
