@@ -170,31 +170,72 @@ export default function Home() {
                </div>
             </div>
 
-            {/* Main Actions Area */}
-            <div className="space-y-4 mb-12">
-               <button 
-                  onClick={startScan}
-                  className="w-full group bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold py-6 rounded-3xl transition-all shadow-2xl shadow-yellow-500/10 flex items-center justify-center gap-4 uppercase tracking-[0.2em] text-sm"
-               >
-                  <Camera className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                  Live HUD Scan
-               </button>
+            {/* Services Grid - Modular Suite */}
+            <div className="space-y-8 mb-12">
+               <div>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600 mb-4 ml-1">Vehicle Appraisal (Vision AI)</h3>
+                  <div className="grid grid-cols-1 gap-3">
+                     <button 
+                        onClick={startScan}
+                        className="w-full group bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold p-5 rounded-3xl transition-all shadow-2xl flex items-center justify-between gap-4"
+                     >
+                        <div className="flex items-center gap-4">
+                           <Camera className="w-6 h-6" />
+                           <div className="text-left">
+                              <p className="text-sm font-black uppercase leading-none">Full 360° HUD Scan</p>
+                              <p className="text-[10px] opacity-70 font-medium mt-1">Stitch multiple panels & detect damage</p>
+                           </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 opacity-50" />
+                     </button>
+                     
+                     <div className="grid grid-cols-2 gap-3">
+                        <button className="bg-slate-900 border border-slate-800 p-4 rounded-3xl text-left space-y-2 group hover:border-blue-500/50 transition-colors">
+                           <Zap className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform" />
+                           <div>
+                              <p className="text-[10px] font-black uppercase">Tire Depth</p>
+                              <p className="text-[8px] text-slate-500 uppercase font-bold">Vision Analysis</p>
+                           </div>
+                        </button>
+                        <button className="bg-slate-900 border border-slate-800 p-4 rounded-3xl text-left space-y-2 group hover:border-red-500/50 transition-colors">
+                           <ShieldAlert className="w-5 h-5 text-red-500 group-hover:scale-110 transition-transform" />
+                           <div>
+                              <p className="text-[10px] font-black uppercase">Structural</p>
+                              <p className="text-[8px] text-slate-500 uppercase font-bold">Panel Gap Check</p>
+                           </div>
+                        </button>
+                     </div>
+                  </div>
+               </div>
 
-               <div className="grid grid-cols-2 gap-4">
-                  <button 
-                     onClick={startUpload}
-                     className="bg-slate-900 hover:bg-slate-800 text-white font-bold py-5 rounded-3xl transition-all flex flex-col items-center justify-center gap-2 border border-slate-800 shadow-xl"
-                  >
-                     <Search className="w-5 h-5 text-blue-500" />
-                     <span className="text-[10px] uppercase tracking-widest">Analyze Photo</span>
-                  </button>
-                  <button 
-                     onClick={() => setStep("service")}
-                     className="bg-slate-900 hover:bg-slate-800 text-white font-bold py-5 rounded-3xl transition-all flex flex-col items-center justify-center gap-2 border border-slate-800 shadow-xl"
-                  >
-                     <FileText className="w-5 h-5 text-green-500" />
-                     <span className="text-[10px] uppercase tracking-widest">Scan Service</span>
-                  </button>
+               <div>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600 mb-4 ml-1">Due Diligence & Admin</h3>
+                  <div className="grid grid-cols-1 gap-3">
+                     <button 
+                        onClick={() => setStep("service")}
+                        className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl text-left flex items-center justify-between group hover:border-green-500/50 transition-colors"
+                     >
+                        <div className="flex items-center gap-4">
+                           <FileText className="w-6 h-6 text-green-500 group-hover:scale-110 transition-transform" />
+                           <div>
+                              <p className="text-sm font-black uppercase leading-none text-white">Service History OCR</p>
+                              <p className="text-[10px] text-slate-500 font-medium mt-1">Digitize stamps & verify mileage</p>
+                           </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-slate-700" />
+                     </button>
+
+                     <button className="w-full bg-slate-900 border border-slate-800 p-5 rounded-3xl text-left flex items-center justify-between group hover:border-purple-500/50 transition-colors">
+                        <div className="flex items-center gap-4">
+                           <Search className="w-6 h-6 text-purple-500 group-hover:scale-110 transition-transform" />
+                           <div>
+                              <p className="text-sm font-black uppercase leading-none text-white">HPI & Finance Check</p>
+                              <p className="text-[10px] text-slate-500 font-medium mt-1">Real-time theft & write-off data</p>
+                           </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-slate-700" />
+                     </button>
+                  </div>
                </div>
             </div>
 
