@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
     // Convert base64 to parts for Gemini
     const base64Data = image.split(",")[1];
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const prompt = `
       Act as a professional automotive damage appraiser for a high-end UK body shop specializing in SMART repairs.
