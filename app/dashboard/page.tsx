@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabase";
 
 export default function Dashboard() {
   const router = useRouter();
-  const [step, setStep] = useState<"intro" | "scanning" | "report" | "upload" | "service" | "hpi">("intro");
+  const [step, setStep] = useState<"intro" | "scanning" | "report" | "upload" | "service" | "service_camera" | "hpi">("intro");
   const [vrm, setVrm] = useState("");
   const [analyzingHPI, setAnalyzingHPI] = useState<boolean>(false);
   const [serviceHistory, setServiceHistory] = useState<any>(null);
@@ -100,7 +100,7 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    if (step !== "scanning") {
+    if (step !== "scanning" && step !== "service_camera") {
       stopCamera();
     }
   }, [step]);
@@ -432,21 +432,25 @@ export default function Dashboard() {
                    <p className="text-slate-500 text-sm mb-12">Point the camera at the dealer stamps and mileage entries. I'll digitize the history for you.</p>
 
                    <button
-                     onClick={() => {
-                        setAnalyzingImage(true);
-                        setTimeout(() => {
-                           setServiceHistory({
-                              score: "4.5/5",
-                              status: "FULL SERVICE HISTORY",
-                              records: [
-                                 { date: "Oct 2024", miles: "32,102", type: "Major", dealer: "BMW London" },
-                                 { date: "Oct 2023", miles: "21,050", type: "Minor", dealer: "BMW London" },
-                                 { date: "Oct 2022", miles: "10,005", type: "Oil", dealer: "Independent" }
-                              ]
-                           });
-                           setAnalyzingImage(false);
-                           setStep("report");
-                        }, 2500);
+                     onClick={async () => {
+                        setStep("service_camera");
+                        try {
+                          const mediaStream = await navigator.mediaDevices.getUserMedia({
+                            video: { facingMode: "environment" },
+                            audio: false
+                          });
+                          setStream(mediaStream);
+                          // Wait for render
+                          setTimeout(() => {
+                              if (videoRef.current) {
+                                videoRef.current.srcObject = mediaStream;
+                              }
+                          }, 100);
+                        } catch (err) {
+                          console.error("Camera access denied:", err);
+                          alert("Please allow camera access.");
+                          setStep("service");
+                        }
                      }}
                      className="w-full bg-blue-600 py-5 rounded-2xl font-bold uppercase tracking-widest text-sm"
                    >
@@ -459,6 +463,92 @@ export default function Dashboard() {
                    <p className="mt-8 font-mono text-xs uppercase tracking-widest text-blue-500 animate-pulse">Digitizing Service Records...</p>
                 </div>
              )}
+          </motion.div>
+        )}
+
+        {step === "service_camera" && (
+          <motion.div
+            key="service_camera"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 flex flex-col bg-black"
+          >
+            {/* Camera View */}
+            <div className="absolute inset-0">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+              />
+              {/* Document Guide Overlay */}
+              <div className="absolute inset-0 border-[30px] border-black/50 pointer-events-none">
+                 <div className="w-full h-full border-2 border-blue-500/50 relative">
+                    <div className="absolute top-0 left-0 w-4 h-4 border-t-4 border-l-4 border-blue-500" />
+                    <div className="absolute top-0 right-0 w-4 h-4 border-t-4 border-r-4 border-blue-500" />
+                    <div className="absolute bottom-0 left-0 w-4 h-4 border-b-4 border-l-4 border-blue-500" />
+                    <div className="absolute bottom-0 right-0 w-4 h-4 border-b-4 border-r-4 border-blue-500" />
+                 </div>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="absolute bottom-0 left-0 w-full p-8 flex flex-col items-center gap-4 bg-gradient-to-t from-black via-black/80 to-transparent">
+               {!analyzingImage ? (
+                  <>
+                     <p className="text-white text-sm font-bold shadow-black drop-shadow-md">Align service book page</p>
+                     <div className="flex items-center gap-6">
+                        <button onClick={() => setStep("service")} className="text-white/70 p-4 font-bold uppercase text-xs">Cancel</button>
+                        <button 
+                           onClick={async () => {
+                              if (!videoRef.current) return;
+                              setAnalyzingImage(true);
+                              
+                              // Capture
+                              const canvas = document.createElement("canvas");
+                              canvas.width = videoRef.current.videoWidth;
+                              canvas.height = videoRef.current.videoHeight;
+                              const ctx = canvas.getContext("2d");
+                              if (ctx) {
+                                 ctx.drawImage(videoRef.current, 0, 0);
+                                 const imageData = canvas.toDataURL("image/jpeg", 0.8);
+                                 
+                                 try {
+                                    const res = await fetch("/api/service-ocr", {
+                                       method: "POST",
+                                       body: JSON.stringify({ image: imageData }),
+                                       headers: { "Content-Type": "application/json" }
+                                    });
+                                    const data = await res.json();
+                                    
+                                    if (data.error) throw new Error(data.error);
+                                    
+                                    setServiceHistory(data);
+                                    setAnalyzingImage(false);
+                                    setStep("report"); // Go to report to see results
+                                 } catch (e) {
+                                    console.error(e);
+                                    alert("Failed to analyze image. Try again.");
+                                    setAnalyzingImage(false);
+                                 }
+                              }
+                           }}
+                           className="w-20 h-20 bg-white rounded-full border-4 border-blue-500 flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+                        >
+                           <div className="w-16 h-16 bg-white rounded-full border-2 border-black/10" />
+                        </button>
+                        <div className="w-16" /> {/* Spacer */}
+                     </div>
+                  </>
+               ) : (
+                  <div className="flex flex-col items-center">
+                     <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
+                     <p className="text-blue-400 font-mono text-xs uppercase tracking-widest animate-pulse">Reading Documents...</p>
+                  </div>
+               )}
+            </div>
           </motion.div>
         )}
 
