@@ -916,9 +916,23 @@ export default function Dashboard() {
             {/* Bottom Actions */}
             <div className="absolute bottom-0 left-0 w-full p-6 bg-slate-950/80 backdrop-blur-xl border-t border-slate-800/50 flex flex-col gap-3">
               <button
-                onClick={() => {
+                onClick={async () => {
                    setAnalyzingImage(false);
                    setStep("scanning");
+                   // Restart camera stream
+                   try {
+                     const mediaStream = await navigator.mediaDevices.getUserMedia({
+                       video: { facingMode: "environment" },
+                       audio: false
+                     });
+                     setStream(mediaStream);
+                     if (videoRef.current) {
+                       videoRef.current.srcObject = mediaStream;
+                     }
+                   } catch (err) {
+                     console.error("Camera access denied:", err);
+                     alert("Please allow camera access to use the live scanner.");
+                   }
                 }}
                 className="w-full bg-slate-800 text-white font-bold py-4 rounded-2xl uppercase tracking-widest text-xs flex items-center justify-center gap-2 border border-slate-700"
               >
