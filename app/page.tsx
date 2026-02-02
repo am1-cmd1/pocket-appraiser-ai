@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Camera, AlertCircle, CheckCircle2, Search, Zap, DollarSign, History, ChevronRight, X, MapPin, Star, Calendar, ShieldAlert, FileText, Info } from "lucide-react";
+import PDFExporter from "@/components/PDFExporter";
 
 export default function Home() {
   const [step, setStep] = useState<"intro" | "scanning" | "report" | "upload" | "service" | "hpi">("intro");
@@ -16,6 +17,7 @@ export default function Home() {
   const [history, setHistory] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"home" | "history" | "stats">("home");
   const [progress, setProgress] = useState(0);
+  const [lastCapturedImage, setLastCapturedImage] = useState<string | undefined>(undefined);
 
   // Load history from Supabase
   useEffect(() => {
@@ -125,6 +127,7 @@ export default function Home() {
     if (ctx) {
       ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
       const imageData = canvas.toDataURL("image/jpeg", 0.8);
+      setLastCapturedImage(imageData);
 
       // 2. Send to our "Brain" API
       try {
@@ -304,7 +307,7 @@ export default function Home() {
                               </div>
                               <div>
                                  <h4 className="font-bold text-sm">{item.vehicle}</h4>
-                                 <p className="text-[10px] text-slate-500 font-mono">{item.vrm} • {item.date}</p>
+                                 <p className="text-[10px] text-slate-500 font-mono">{item.vrm} • {new Date(item.created_at).toLocaleDateString()}</p>
                               </div>
                            </div>
                            <div className="text-right">
@@ -894,10 +897,15 @@ export default function Home() {
                  <Camera className="w-4 h-4" />
                  Scan Another Panel
               </button>
-              <button className="w-full bg-white text-slate-950 font-black py-5 rounded-2xl uppercase tracking-widest text-sm flex items-center justify-center gap-2 shadow-2xl">
-                 Generate Official Valuation
-                 <ChevronRight className="w-4 h-4" />
-              </button>
+              
+              <PDFExporter 
+                vrm={vrm}
+                vehicleName={`${valuationData?.make || ''} ${valuationData?.model || ''}`}
+                valuationData={valuationData}
+                reports={reports}
+                totalReconCost={totalReconCost}
+                capturedImage={lastCapturedImage}
+              />
             </div>
           </motion.div>
         )}
