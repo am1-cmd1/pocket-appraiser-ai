@@ -18,52 +18,62 @@ export async function POST(req: NextRequest) {
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const prompt = `
-      Act as a professional automotive damage appraiser for a high-end UK body shop specializing in SMART repairs.
-      Analyze this photo of car damage with extreme precision. 
-      
-      Look for these specific "Pro" indicators of hidden damage:
-      1. Panel Gap Irregularities: Are gaps between 3mm-5mm? Is there tapering (widening/narrowing) or asymmetry between sides?
-      2. Paint Surface Anomalies: Look for orange peel texture mismatch, overspray on rubber seals/trim, sanding marks under the clear coat, or hard tape lines in jambs.
-      3. Structural Red Flags: Check for bolt head scoring (paint chips on wing/hood bolts), inner wing ripples, or non-factory welds (MIG beads vs circular spot welds).
+You are an expert automotive damage appraiser for a UK body shop. Analyze this photo with precision.
 
-      Identify:
-      1. The specific car panel. Use standard terms: Front, Rear, Left Side, Right Side, Front Left, Front Right, Rear Left, Rear Right, Wheel/Tire.
-      2. The type of damage (Scratch, Dent, Scuff, Chip, Tire Wear).
-      3. The severity (Minor, Moderate, Severe).
-      4. Structural & Detail Check:
-         - Panel Gap Alignment: (OK | IRREGULAR)
-         - Paint Depth Match: (MATCH | MISMATCH)
-         - Prior Repair: (NONE | DETECTED)
-         - Tire Depth (If wheel seen): Estimate in mm (e.g. 3mm).
-      5. Provide a realistic estimate for the repair cost in GBP (British Pounds) based on UK labor rates.
-      
-      IMPORTANT: You must return ONLY a JSON object with this exact structure:
-      {
-        "id": "SCAN-unique_id",
-        "totalCost": number,
-        "defects": [
-          {
-            "id": 1,
-            "part": "string",
-            "type": "string",
-            "severity": "string",
-            "cost": number,
-            "details": "string"
-          }
-        ],
-        "structural": {
-           "gaps": "OK | IRREGULAR",
-           "paint": "MATCH | MISMATCH",
-           "priorRepair": "NONE | DETECTED",
-           "tireDepth": "string (optional depth in mm)",
-           "warning": "string (A detailed pro-level warning if issues detected, mentioning specific red flags like 'tapering gaps' or 'overspray detected on trim')"
-        },
-        "recommendation": "string",
-        "localShops": [
-           { "name": "London SMART Repair", "distance": "1.2 miles", "rating": 4.8, "priceMatch": "£X - £Y", "availability": "Tomorrow", "specialty": "Bumper Scuffs" }
-        ]
-      }
-    `;
+## PANEL IDENTIFICATION (CRITICAL - BE ACCURATE)
+First, determine WHICH PANEL of the car is shown. Use these visual clues:
+
+**Front Bumper**: Plastic, often has grille/fog lights, number plate area, curved at corners
+**Rear Bumper**: Plastic, has exhaust cutouts or reflectors, often has parking sensors
+**Front Wing/Fender** (Left or Right): Metal panel between front wheel arch and door, contains indicator
+**Rear Quarter Panel** (Left or Right): Metal panel behind rear doors, curves into wheel arch
+**Door** (Front/Rear, Left/Right): Has handles, window frames, mirrors (front doors)
+**Bonnet/Hood**: Large flat panel at front, has hinges at back, may have vents
+**Boot/Trunk Lid**: Rear opening panel, has hinges, may have spoiler
+**Roof**: Top horizontal panel
+**Sill/Rocker Panel**: Lower panel below doors
+**A/B/C Pillar**: Vertical structural posts between windows
+**Wheel/Alloy**: If focusing on wheel, rim, or tire
+
+Use EXACTLY one of these panel names: "Front Bumper", "Rear Bumper", "Front Left Wing", "Front Right Wing", "Rear Left Quarter", "Rear Right Quarter", "Front Left Door", "Front Right Door", "Rear Left Door", "Rear Right Door", "Bonnet", "Boot Lid", "Roof", "Left Sill", "Right Sill", "Left Mirror", "Right Mirror", "Front Left Wheel", "Front Right Wheel", "Rear Left Wheel", "Rear Right Wheel"
+
+## DAMAGE ASSESSMENT
+Identify damage type: Scratch, Dent, Scuff, Stone Chips, Crack, Corrosion, Paint Fade, Curbed Alloy
+Severity: Minor (£50-150), Moderate (£150-400), Severe (£400+)
+
+## STRUCTURAL CHECKS
+- Panel gaps: OK or IRREGULAR (misaligned gaps suggest prior accident)
+- Paint match: MATCH or MISMATCH (orange peel, overspray, color difference)
+- Prior repair evidence: NONE or DETECTED
+
+## OUTPUT FORMAT
+Return ONLY valid JSON:
+{
+  "id": "SCAN-[random6chars]",
+  "totalCost": [number in GBP],
+  "defects": [
+    {
+      "id": 1,
+      "part": "[EXACT panel name from list above]",
+      "type": "[damage type]",
+      "severity": "[Minor/Moderate/Severe]",
+      "cost": [repair cost in GBP],
+      "details": "[brief description of specific damage observed]"
+    }
+  ],
+  "structural": {
+    "gaps": "OK",
+    "paint": "MATCH",
+    "priorRepair": "NONE",
+    "tireDepth": null,
+    "warning": null
+  },
+  "recommendation": "[professional trade-in advice]",
+  "localShops": [
+    { "name": "SMART Repair London", "distance": "1.2 miles", "rating": 4.8, "priceMatch": "£[min]-£[max]", "availability": "Tomorrow", "specialty": "[relevant specialty]" }
+  ]
+}
+`;
 
     const result = await model.generateContent([
       {
