@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, AlertCircle, CheckCircle2, Search, Zap, DollarSign, History, ChevronRight, X, MapPin, Star, Calendar, ShieldAlert, FileText, Info, LogOut } from "lucide-react";
+import { Camera, AlertCircle, CheckCircle2, Search, Zap, DollarSign, History, ChevronRight, X, MapPin, Star, Calendar, ShieldAlert, FileText, Info, LogOut, Car, Gauge, Fuel, Palette, Clock, TrendingUp, Fingerprint, Settings2, Cog } from "lucide-react";
 import PDFExporter from "@/components/PDFExporter";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -22,6 +22,8 @@ export default function Dashboard() {
   const [progress, setProgress] = useState(0);
   const [lastCapturedImage, setLastCapturedImage] = useState<string | undefined>(undefined);
   const [userEmail, setUserEmail] = useState<string>("");
+  const [vinData, setVinData] = useState<any>(null);
+  const [vinInput, setVinInput] = useState<string>("");
 
   // Auth Check
   useEffect(() => {
@@ -810,6 +812,212 @@ export default function Dashboard() {
                       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Recon Impact</p>
                       <p className="font-bold text-red-500">-£{totalReconCost.toLocaleString()}</p>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Vehicle Details Card - DVSA Data */}
+              {valuationData && (
+                <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                      <Car className="w-5 h-5 text-blue-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black uppercase">Vehicle Details</h3>
+                      <p className="text-[10px] text-slate-500">Source: {valuationData.source || "DVSA"}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-slate-800/50 p-3 rounded-xl">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Palette className="w-3 h-3 text-slate-400" />
+                        <span className="text-[10px] text-slate-500 uppercase font-bold">Colour</span>
+                      </div>
+                      <p className="text-sm font-bold">{valuationData.color || "Unknown"}</p>
+                    </div>
+                    <div className="bg-slate-800/50 p-3 rounded-xl">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Fuel className="w-3 h-3 text-slate-400" />
+                        <span className="text-[10px] text-slate-500 uppercase font-bold">Fuel Type</span>
+                      </div>
+                      <p className="text-sm font-bold">{valuationData.fuel || "Unknown"}</p>
+                    </div>
+                    <div className="bg-slate-800/50 p-3 rounded-xl">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Calendar className="w-3 h-3 text-slate-400" />
+                        <span className="text-[10px] text-slate-500 uppercase font-bold">Year</span>
+                      </div>
+                      <p className="text-sm font-bold">{valuationData.year || "Unknown"}</p>
+                    </div>
+                    <div className="bg-slate-800/50 p-3 rounded-xl">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Clock className="w-3 h-3 text-slate-400" />
+                        <span className="text-[10px] text-slate-500 uppercase font-bold">MOT Expiry</span>
+                      </div>
+                      <p className={`text-sm font-bold ${valuationData.motExpiry ? (new Date(valuationData.motExpiry) < new Date() ? 'text-red-500' : 'text-green-500') : ''}`}>
+                        {valuationData.motExpiry ? new Date(valuationData.motExpiry).toLocaleDateString('en-GB') : "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* MOT History & Mileage Timeline */}
+              {valuationData?.mileageHistory && valuationData.mileageHistory.length > 0 && (
+                <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center">
+                        <Gauge className="w-5 h-5 text-green-500" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-black uppercase">MOT Mileage History</h3>
+                        <p className="text-[10px] text-slate-500">{valuationData.mileageHistory.length} records found</p>
+                      </div>
+                    </div>
+                    {valuationData.mileageAnomaly === "DETECTED" && (
+                      <div className="bg-red-500/20 text-red-400 px-2 py-1 rounded-lg text-[10px] font-bold uppercase flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" /> Mileage Discrepancy
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Mileage Graph */}
+                  <div className="h-24 flex items-end gap-1 mb-4">
+                    {valuationData.mileageHistory.slice(-10).map((entry: any, i: number, arr: any[]) => {
+                      const maxMiles = Math.max(...arr.map((e: any) => e.mileage));
+                      const height = (entry.mileage / maxMiles) * 100;
+                      return (
+                        <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                          <div 
+                            className="w-full bg-green-500/30 rounded-t-sm relative group cursor-pointer hover:bg-green-500/50 transition-colors"
+                            style={{ height: `${Math.max(height, 5)}%` }}
+                          >
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-slate-800 px-2 py-1 rounded text-[8px] font-mono whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                              {entry.mileage.toLocaleString()} mi
+                            </div>
+                          </div>
+                          <span className="text-[7px] text-slate-600 font-mono">{entry.date?.slice(2,7)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Latest Reading */}
+                  <div className="flex justify-between items-center pt-3 border-t border-slate-800">
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-bold">Latest MOT Reading</p>
+                      <p className="text-lg font-black text-green-500">
+                        {valuationData.mileageHistory[0]?.mileage?.toLocaleString() || "N/A"} miles
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-slate-500 uppercase font-bold">Annual Avg</p>
+                      <p className="text-sm font-bold text-slate-300">
+                        ~{valuationData.mileageHistory.length > 1 
+                          ? Math.round((valuationData.mileageHistory[0]?.mileage - valuationData.mileageHistory[valuationData.mileageHistory.length - 1]?.mileage) / valuationData.mileageHistory.length).toLocaleString()
+                          : "N/A"} mi/yr
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* VIN Decoder Card */}
+              {vinData && (
+                <div className="bg-gradient-to-br from-purple-500/10 to-slate-900 border border-purple-500/30 p-6 rounded-3xl">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                      <Fingerprint className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black uppercase">VIN Decoded</h3>
+                      <p className="text-[10px] text-purple-400 font-mono">{vinData.vin}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-slate-800/50 p-3 rounded-xl">
+                      <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Body Style</p>
+                      <p className="text-sm font-bold">{vinData.bodyClass || "N/A"}</p>
+                    </div>
+                    <div className="bg-slate-800/50 p-3 rounded-xl">
+                      <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">Drive Type</p>
+                      <p className="text-sm font-bold">{vinData.driveType || "N/A"}</p>
+                    </div>
+                  </div>
+
+                  {vinData.engine && (
+                    <div className="bg-slate-800/30 p-4 rounded-xl mb-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Cog className="w-4 h-4 text-purple-400" />
+                        <span className="text-[10px] text-slate-400 uppercase font-bold">Engine Specifications</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div>
+                          <p className="text-lg font-black text-purple-400">{vinData.engine.displacement || "—"}</p>
+                          <p className="text-[8px] text-slate-500 uppercase">Displacement</p>
+                        </div>
+                        <div>
+                          <p className="text-lg font-black text-purple-400">{vinData.engine.cylinders || "—"}</p>
+                          <p className="text-[8px] text-slate-500 uppercase">Cylinders</p>
+                        </div>
+                        <div>
+                          <p className="text-lg font-black text-purple-400">{vinData.engine.horsepower || "—"}</p>
+                          <p className="text-[8px] text-slate-500 uppercase">HP</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {vinData.transmission && (
+                    <div className="flex items-center justify-between text-xs bg-slate-800/30 p-3 rounded-xl">
+                      <span className="text-slate-400">Transmission</span>
+                      <span className="font-bold">{vinData.transmission.type} {vinData.transmission.speeds ? `(${vinData.transmission.speeds}-speed)` : ""}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* VIN Input (if no VIN data yet) */}
+              {!vinData && valuationData && (
+                <div className="bg-slate-900 border border-dashed border-slate-700 p-5 rounded-3xl">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Fingerprint className="w-5 h-5 text-slate-500" />
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-400">Decode VIN for Full Specs</h3>
+                      <p className="text-[10px] text-slate-600">Engine, transmission, safety features & more</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Enter 17-digit VIN"
+                      value={vinInput}
+                      onChange={(e) => setVinInput(e.target.value.toUpperCase())}
+                      maxLength={17}
+                      className="flex-1 bg-slate-800 border border-slate-700 px-4 py-3 rounded-xl text-xs font-mono uppercase tracking-wider outline-none focus:border-purple-500"
+                    />
+                    <button
+                      onClick={async () => {
+                        if (vinInput.length !== 17) {
+                          alert("VIN must be 17 characters");
+                          return;
+                        }
+                        const res = await fetch(`/api/vin-decode?vin=${vinInput}`);
+                        const data = await res.json();
+                        if (data.error) {
+                          alert(data.error);
+                        } else {
+                          setVinData(data);
+                        }
+                      }}
+                      className="bg-purple-600 hover:bg-purple-500 px-4 py-3 rounded-xl text-xs font-bold uppercase transition-colors"
+                    >
+                      Decode
+                    </button>
                   </div>
                 </div>
               )}
