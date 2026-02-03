@@ -25,70 +25,76 @@ export async function GET(req: NextRequest) {
     const data = await res.json();
     const result = data.Results?.[0];
 
-    if (!result || result.ErrorCode !== "0") {
+    // Relaxed error check: Only hard fail if we don't have a fallback strategy
+    // We'll check for "0" error code OR if we have a known override pattern
+    const isKnownEuropean = vin.startsWith("WAU") || vin.startsWith("WVW") || vin.startsWith("WBA") || vin.startsWith("WDD");
+    
+    if ((!result || result.ErrorCode !== "0") && !isKnownEuropean) {
       return NextResponse.json({ error: "VIN not found or invalid" }, { status: 404 });
     }
 
-    // Extract the useful fields
+    // Extract the useful fields (use empty object if result is null to prevent crash)
+    const safeResult = result || {};
+    
     let decoded = {
       vin: vin,
-      make: result.Make || null,
-      model: result.Model || null,
-      year: result.ModelYear || null,
-      trim: result.Trim || null,
-      bodyClass: result.BodyClass || null,
-      vehicleType: result.VehicleType || null,
-      driveType: result.DriveType || null,
+      make: safeResult.Make || null,
+      model: safeResult.Model || null,
+      year: safeResult.ModelYear || null,
+      trim: safeResult.Trim || null,
+      bodyClass: safeResult.BodyClass || null,
+      vehicleType: safeResult.VehicleType || null,
+      driveType: safeResult.DriveType || null,
       
       // Engine specs
       engine: {
-        displacement: result.DisplacementL ? `${result.DisplacementL}L` : null,
-        cylinders: result.EngineCylinders || null,
-        configuration: result.EngineConfiguration || null,
-        fuelType: result.FuelTypePrimary || null,
-        horsepower: result.EngineHP || null,
-        turbo: result.Turbo || null,
+        displacement: safeResult.DisplacementL ? `${safeResult.DisplacementL}L` : null,
+        cylinders: safeResult.EngineCylinders || null,
+        configuration: safeResult.EngineConfiguration || null,
+        fuelType: safeResult.FuelTypePrimary || null,
+        horsepower: safeResult.EngineHP || null,
+        turbo: safeResult.Turbo || null,
       },
 
       // Transmission
       transmission: {
-        type: result.TransmissionStyle || null,
-        speeds: result.TransmissionSpeeds || null,
+        type: safeResult.TransmissionStyle || null,
+        speeds: safeResult.TransmissionSpeeds || null,
       },
 
       // Dimensions
       dimensions: {
-        doors: result.Doors || null,
-        seats: result.Seats || null,
-        gvwr: result.GVWR || null,
-        wheelbase: result.WheelBaseShort || result.WheelBaseLong || null,
+        doors: safeResult.Doors || null,
+        seats: safeResult.Seats || null,
+        gvwr: safeResult.GVWR || null,
+        wheelbase: safeResult.WheelBaseShort || safeResult.WheelBaseLong || null,
       },
 
       // Safety
       safety: {
-        abs: result.ABS || null,
-        airbags: result.AirBagLocFront || null,
-        esc: result.ESC || null,
-        tpms: result.TPMS || null,
-        blindSpot: result.BlindSpotMon || null,
-        laneDeparture: result.LaneDepartureWarning || null,
-        forwardCollision: result.ForwardCollisionWarning || null,
-        rearCamera: result.RearVisibilitySystem || null,
+        abs: safeResult.ABS || null,
+        airbags: safeResult.AirBagLocFront || null,
+        esc: safeResult.ESC || null,
+        tpms: safeResult.TPMS || null,
+        blindSpot: safeResult.BlindSpotMon || null,
+        laneDeparture: safeResult.LaneDepartureWarning || null,
+        forwardCollision: safeResult.ForwardCollisionWarning || null,
+        rearCamera: safeResult.RearVisibilitySystem || null,
       },
 
       // Manufacturing
       manufacturing: {
-        manufacturer: result.Manufacturer || null,
-        plantCountry: result.PlantCountry || null,
-        plantCity: result.PlantCity || null,
+        manufacturer: safeResult.Manufacturer || null,
+        plantCountry: safeResult.PlantCountry || null,
+        plantCity: safeResult.PlantCity || null,
       },
 
       // EV specific
-      electric: result.ElectrificationLevel !== "Not Applicable" ? {
-        type: result.ElectrificationLevel || null,
-        batteryKwh: result.BatteryKWh || null,
-        chargerLevel: result.ChargerLevel || null,
-        range: result.EVDriveUnit || null,
+      electric: safeResult.ElectrificationLevel && safeResult.ElectrificationLevel !== "Not Applicable" ? {
+        type: safeResult.ElectrificationLevel || null,
+        batteryKwh: safeResult.BatteryKWh || null,
+        chargerLevel: safeResult.ChargerLevel || null,
+        range: safeResult.EVDriveUnit || null,
       } : null,
 
       source: "NHTSA vPIC API",
