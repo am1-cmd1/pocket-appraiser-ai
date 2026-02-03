@@ -973,9 +973,28 @@ export default function Dashboard() {
                   )}
 
                   {vinData.transmission && (
-                    <div className="flex items-center justify-between text-xs bg-slate-800/30 p-3 rounded-xl">
+                    <div className="flex items-center justify-between text-xs bg-slate-800/30 p-3 rounded-xl mb-3">
                       <span className="text-slate-400">Transmission</span>
                       <span className="font-bold">{vinData.transmission.type} {vinData.transmission.speeds ? `(${vinData.transmission.speeds}-speed)` : ""}</span>
+                    </div>
+                  )}
+
+                  {vinData.factoryOptions && vinData.factoryOptions.length > 0 && (
+                    <div className="bg-slate-800/50 p-4 rounded-xl border border-dashed border-slate-700/50">
+                       <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                             <Settings2 className="w-3 h-3 text-purple-400" />
+                             <span className="text-[10px] text-purple-400 uppercase font-bold tracking-widest">Factory Build Sheet</span>
+                          </div>
+                          <span className="bg-purple-500/20 text-purple-300 text-[8px] px-2 py-0.5 rounded font-bold uppercase">PRO DATA</span>
+                       </div>
+                       <div className="flex flex-wrap gap-2">
+                          {vinData.factoryOptions.map((opt: string, i: number) => (
+                             <span key={i} className="text-[9px] font-bold bg-slate-900 border border-slate-700 px-2 py-1 rounded text-slate-300">
+                                {opt}
+                             </span>
+                          ))}
+                       </div>
                     </div>
                   )}
                 </div>

@@ -170,6 +170,16 @@ export async function GET(req: NextRequest) {
              rearCamera: "Standard",
              esc: "Standard"
           },
+          // Mock Factory Options for Demo
+          factoryOptions: [
+             "Technology Package",
+             "20\" 5-Segment-Spoke Alloy Wheels",
+             "Matrix LED Headlights",
+             "Panoramic Glass Sunroof",
+             "Virtual Cockpit",
+             "Bang & Olufsen Sound System",
+             "Black Styling Pack"
+          ],
           source: "Global VIN Database"
        };
     }
