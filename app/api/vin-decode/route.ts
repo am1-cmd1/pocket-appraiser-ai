@@ -97,6 +97,8 @@ export async function GET(req: NextRequest) {
         range: safeResult.EVDriveUnit || null,
       } : null,
 
+      factoryOptions: null as string[] | null, // Explicitly allow this field
+
       source: "NHTSA vPIC API",
     };
 
