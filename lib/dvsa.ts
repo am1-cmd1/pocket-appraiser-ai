@@ -19,7 +19,12 @@ async function getAccessToken(): Promise<string | null> {
   const tokenUrl = process.env.DVSA_TOKEN_URL;
 
   if (!clientId || !clientSecret || !scope || !tokenUrl) {
-    console.error("DVSA OAuth credentials not configured");
+    console.error("DVSA OAuth credentials not configured:", {
+      hasClientId: !!clientId,
+      hasClientSecret: !!clientSecret,
+      hasScope: !!scope,
+      hasTokenUrl: !!tokenUrl,
+    });
     return null;
   }
 
